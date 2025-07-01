@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 """
 Business Finance Manager - Schedule C Tax Tracking
-Flask Backend Application
+Flask Backend Application with Complete CRUD Operations
 """
 
 from flask import Flask, render_template, request, jsonify
 import sqlite3
-import os
-from datetime import datetime, date, timedelta
+from datetime import datetime, date
 import webbrowser
 import threading
 import time
@@ -192,368 +191,543 @@ def index():
 @app.route('/api/overview')
 def api_overview():
     """API endpoint for overview data"""
-    conn = get_db_connection()
-    
-    # Get totals
-    income_result = conn.execute('SELECT SUM(amount) as total FROM income').fetchone()
-    expenses_result = conn.execute('SELECT SUM(amount) as total FROM expenses').fetchone()
-    mileage_result = conn.execute('SELECT SUM(deduction_amount) as total FROM mileage').fetchone()
-    
-    total_income = income_result['total'] or 0
-    total_expenses = expenses_result['total'] or 0
-    mileage_deductions = mileage_result['total'] or 0
-    
-    # Calculate home office deduction
-    home_office = conn.execute('SELECT annual_deduction FROM home_office ORDER BY created_at DESC LIMIT 1').fetchone()
-    home_office_deduction = home_office['annual_deduction'] if home_office else 0
-    
-    # Calculate utility deductions
-    utilities_result = conn.execute('SELECT SUM(annual_deduction) as total FROM utilities').fetchone()
-    utility_deductions = utilities_result['total'] or 0
-    
-    # Calculate net profit
-    total_deductions = total_expenses + mileage_deductions + home_office_deduction + utility_deductions
-    net_profit = total_income - total_deductions
-    
-    # Calculate taxes
-    se_tax = calculate_self_employment_tax(net_profit)
-    
-    # Get tax settings for income tax calculation
-    tax_settings = conn.execute('SELECT * FROM tax_settings ORDER BY updated_at DESC LIMIT 1').fetchone()
-    
-    income_tax = 0
-    if tax_settings and net_profit > 0:
-        # Simplified income tax calculation (22% bracket assumption)
-        total_income_for_tax = net_profit + (tax_settings['other_income'] or 0)
-        income_tax = round(total_income_for_tax * 0.22, 2)
-    
-    total_tax = se_tax + income_tax
-    
-    # Get recent transactions
-    recent_income = conn.execute(
-        'SELECT client, amount, date, "income" as type FROM income ORDER BY date DESC LIMIT 5'
-    ).fetchall()
-    
-    recent_expenses = conn.execute(
-        'SELECT description, amount, date, "expense" as type FROM expenses ORDER BY date DESC LIMIT 5'
-    ).fetchall()
-    
-    # Combine and sort recent transactions
-    all_recent = []
-    for row in recent_income:
-        all_recent.append(dict(row))
-    for row in recent_expenses:
-        all_recent.append(dict(row))
-    
-    all_recent.sort(key=lambda x: x['date'], reverse=True)
-    recent_transactions = all_recent[:10]
-    
-    # Get tax reminders
-    tax_reminders = get_tax_reminders()
-    
-    conn.close()
-    
-    return jsonify({
-        'total_income': float(total_income),
-        'total_expenses': float(total_expenses),
-        'mileage_deductions': float(mileage_deductions),
-        'home_office_deduction': float(home_office_deduction),
-        'utility_deductions': float(utility_deductions),
-        'net_profit': float(net_profit),
-        'self_employment_tax': float(se_tax),
-        'income_tax': float(income_tax),
-        'total_tax': float(total_tax),
-        'recent_transactions': recent_transactions,
-        'tax_reminders': tax_reminders
-    })
+    try:
+        conn = get_db_connection()
+        
+        # Get totals
+        income_result = conn.execute('SELECT SUM(amount) as total FROM income').fetchone()
+        expenses_result = conn.execute('SELECT SUM(amount) as total FROM expenses').fetchone()
+        mileage_result = conn.execute('SELECT SUM(deduction_amount) as total FROM mileage').fetchone()
+        
+        total_income = income_result['total'] or 0
+        total_expenses = expenses_result['total'] or 0
+        mileage_deductions = mileage_result['total'] or 0
+        
+        # Calculate home office deduction
+        home_office = conn.execute('SELECT annual_deduction FROM home_office ORDER BY created_at DESC LIMIT 1').fetchone()
+        home_office_deduction = home_office['annual_deduction'] if home_office else 0
+        
+        # Calculate utility deductions
+        utilities_result = conn.execute('SELECT SUM(annual_deduction) as total FROM utilities').fetchone()
+        utility_deductions = utilities_result['total'] or 0
+        
+        # Calculate net profit
+        total_deductions = total_expenses + mileage_deductions + home_office_deduction + utility_deductions
+        net_profit = total_income - total_deductions
+        
+        # Calculate taxes
+        se_tax = calculate_self_employment_tax(net_profit)
+        
+        # Get tax settings for income tax calculation
+        tax_settings = conn.execute('SELECT * FROM tax_settings ORDER BY updated_at DESC LIMIT 1').fetchone()
+        
+        income_tax = 0
+        if tax_settings and net_profit > 0:
+            # Simplified income tax calculation (22% bracket assumption)
+            total_income_for_tax = net_profit + (tax_settings['other_income'] or 0)
+            income_tax = round(total_income_for_tax * 0.22, 2)
+        
+        total_tax = se_tax + income_tax
+        
+        # Get recent transactions
+        recent_income = conn.execute(
+            'SELECT client, amount, date, "income" as type FROM income ORDER BY date DESC LIMIT 5'
+        ).fetchall()
+        
+        recent_expenses = conn.execute(
+            'SELECT description, amount, date, "expense" as type FROM expenses ORDER BY date DESC LIMIT 5'
+        ).fetchall()
+        
+        # Combine and sort recent transactions
+        all_recent = []
+        for row in recent_income:
+            all_recent.append(dict(row))
+        for row in recent_expenses:
+            all_recent.append(dict(row))
+        
+        all_recent.sort(key=lambda x: x['date'], reverse=True)
+        recent_transactions = all_recent[:10]
+        
+        # Get tax reminders
+        tax_reminders = get_tax_reminders()
+        
+        conn.close()
+        
+        return jsonify({
+            'total_income': float(total_income),
+            'total_expenses': float(total_expenses),
+            'mileage_deductions': float(mileage_deductions),
+            'home_office_deduction': float(home_office_deduction),
+            'utility_deductions': float(utility_deductions),
+            'net_profit': float(net_profit),
+            'self_employment_tax': float(se_tax),
+            'income_tax': float(income_tax),
+            'total_tax': float(total_tax),
+            'recent_transactions': recent_transactions,
+            'tax_reminders': tax_reminders
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
+# ===== INCOME ENDPOINTS =====
 @app.route('/api/income', methods=['GET', 'POST'])
 def api_income():
     """Handle income operations"""
-    conn = get_db_connection()
-    
-    if request.method == 'POST':
-        data = request.json
+    try:
+        conn = get_db_connection()
         
-        conn.execute('''
-            INSERT INTO income (client, service_type, amount, date, expects_1099, notes)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (
-            data['client'],
-            data['service_type'],
-            data['amount'],
-            data['date'],
-            data['expects_1099'],
-            data.get('notes', '')
-        ))
-        conn.commit()
-        conn.close()
+        if request.method == 'POST':
+            data = request.json
+            
+            conn.execute('''
+                INSERT INTO income (client, service_type, amount, date, expects_1099, notes)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (
+                data['client'],
+                data['service_type'],
+                data['amount'],
+                data['date'],
+                data['expects_1099'],
+                data.get('notes', '')
+            ))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True})
         
-        return jsonify({'success': True})
-    
-    else:
-        income_records = conn.execute(
-            'SELECT * FROM income ORDER BY date DESC'
-        ).fetchall()
-        
-        conn.close()
-        
-        return jsonify([dict(row) for row in income_records])
+        else:
+            income_records = conn.execute(
+                'SELECT * FROM income ORDER BY date DESC'
+            ).fetchall()
+            
+            conn.close()
+            
+            return jsonify([dict(row) for row in income_records])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
+@app.route('/api/income/<int:record_id>', methods=['GET', 'PUT', 'DELETE'])
+def api_income_modify(record_id):
+    """Handle income view/edit/delete operations"""
+    try:
+        conn = get_db_connection()
+        
+        if request.method == 'GET':
+            record = conn.execute(
+                'SELECT * FROM income WHERE id = ?', (record_id,)
+            ).fetchone()
+            conn.close()
+            
+            if record:
+                return jsonify(dict(record))
+            else:
+                return jsonify({'error': 'Record not found'}), 404
+        
+        elif request.method == 'PUT':
+            data = request.json
+            
+            conn.execute('''
+                UPDATE income 
+                SET client = ?, service_type = ?, amount = ?, date = ?, expects_1099 = ?, notes = ?
+                WHERE id = ?
+            ''', (
+                data['client'],
+                data['service_type'],
+                data['amount'],
+                data['date'],
+                data['expects_1099'],
+                data.get('notes', ''),
+                record_id
+            ))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True})
+        
+        elif request.method == 'DELETE':
+            conn.execute('DELETE FROM income WHERE id = ?', (record_id,))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ===== EXPENSE ENDPOINTS =====
 @app.route('/api/expenses', methods=['GET', 'POST'])
 def api_expenses():
     """Handle expense operations"""
-    conn = get_db_connection()
-    
-    if request.method == 'POST':
-        data = request.json
+    try:
+        conn = get_db_connection()
         
-        conn.execute('''
-            INSERT INTO expenses (category, description, amount, date, business_purpose)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (
-            data['category'],
-            data['description'],
-            data['amount'],
-            data['date'],
-            data['business_purpose']
-        ))
-        conn.commit()
-        conn.close()
+        if request.method == 'POST':
+            data = request.json
+            
+            conn.execute('''
+                INSERT INTO expenses (category, description, amount, date, business_purpose)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (
+                data['category'],
+                data['description'],
+                data['amount'],
+                data['date'],
+                data['business_purpose']
+            ))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True})
         
-        return jsonify({'success': True})
-    
-    else:
-        expense_records = conn.execute(
-            'SELECT * FROM expenses ORDER BY date DESC'
-        ).fetchall()
-        
-        conn.close()
-        
-        return jsonify([dict(row) for row in expense_records])
+        else:
+            expense_records = conn.execute(
+                'SELECT * FROM expenses ORDER BY date DESC'
+            ).fetchall()
+            
+            conn.close()
+            
+            return jsonify([dict(row) for row in expense_records])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
+@app.route('/api/expenses/<int:record_id>', methods=['GET', 'PUT', 'DELETE'])
+def api_expenses_modify(record_id):
+    """Handle expense view/edit/delete operations"""
+    try:
+        conn = get_db_connection()
+        
+        if request.method == 'GET':
+            record = conn.execute(
+                'SELECT * FROM expenses WHERE id = ?', (record_id,)
+            ).fetchone()
+            conn.close()
+            
+            if record:
+                return jsonify(dict(record))
+            else:
+                return jsonify({'error': 'Record not found'}), 404
+        
+        elif request.method == 'PUT':
+            data = request.json
+            
+            conn.execute('''
+                UPDATE expenses 
+                SET category = ?, description = ?, amount = ?, date = ?, business_purpose = ?
+                WHERE id = ?
+            ''', (
+                data['category'],
+                data['description'],
+                data['amount'],
+                data['date'],
+                data['business_purpose'],
+                record_id
+            ))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True})
+        
+        elif request.method == 'DELETE':
+            conn.execute('DELETE FROM expenses WHERE id = ?', (record_id,))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ===== MILEAGE ENDPOINTS =====
 @app.route('/api/mileage', methods=['GET', 'POST'])
 def api_mileage():
     """Handle mileage operations"""
-    conn = get_db_connection()
-    
-    if request.method == 'POST':
-        data = request.json
+    try:
+        conn = get_db_connection()
         
-        # Calculate deduction (2024 IRS rate: $0.67 per mile)
-        miles = float(data['miles'])
-        deduction = round(miles * 0.67, 2)
+        if request.method == 'POST':
+            data = request.json
+            
+            # Calculate deduction (2024 IRS rate: $0.67 per mile)
+            miles = float(data['miles'])
+            deduction = round(miles * 0.67, 2)
+            
+            conn.execute('''
+                INSERT INTO mileage (start_location, destination, miles, business_purpose, date, deduction_amount)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (
+                data['start_location'],
+                data['destination'],
+                data['miles'],
+                data['business_purpose'],
+                data['date'],
+                deduction
+            ))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True})
         
-        conn.execute('''
-            INSERT INTO mileage (start_location, destination, miles, business_purpose, date, deduction_amount)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (
-            data['start_location'],
-            data['destination'],
-            data['miles'],
-            data['business_purpose'],
-            data['date'],
-            deduction
-        ))
-        conn.commit()
-        conn.close()
-        
-        return jsonify({'success': True})
-    
-    else:
-        mileage_records = conn.execute(
-            'SELECT * FROM mileage ORDER BY date DESC'
-        ).fetchall()
-        
-        conn.close()
-        
-        return jsonify([dict(row) for row in mileage_records])
+        else:
+            mileage_records = conn.execute(
+                'SELECT * FROM mileage ORDER BY date DESC'
+            ).fetchall()
+            
+            conn.close()
+            
+            return jsonify([dict(row) for row in mileage_records])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
+@app.route('/api/mileage/<int:record_id>', methods=['GET', 'PUT', 'DELETE'])
+def api_mileage_modify(record_id):
+    """Handle mileage view/edit/delete operations"""
+    try:
+        conn = get_db_connection()
+        
+        if request.method == 'GET':
+            record = conn.execute(
+                'SELECT * FROM mileage WHERE id = ?', (record_id,)
+            ).fetchone()
+            conn.close()
+            
+            if record:
+                return jsonify(dict(record))
+            else:
+                return jsonify({'error': 'Record not found'}), 404
+        
+        elif request.method == 'PUT':
+            data = request.json
+            
+            # Recalculate deduction with updated miles
+            miles = float(data['miles'])
+            deduction = round(miles * 0.67, 2)
+            
+            conn.execute('''
+                UPDATE mileage 
+                SET start_location = ?, destination = ?, miles = ?, business_purpose = ?, date = ?, deduction_amount = ?
+                WHERE id = ?
+            ''', (
+                data['start_location'],
+                data['destination'],
+                data['miles'],
+                data['business_purpose'],
+                data['date'],
+                deduction,
+                record_id
+            ))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True})
+        
+        elif request.method == 'DELETE':
+            conn.execute('DELETE FROM mileage WHERE id = ?', (record_id,))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ===== OTHER ENDPOINTS (unchanged) =====
 @app.route('/api/home-office', methods=['GET', 'POST'])
 def api_home_office():
     """Handle home office deduction"""
-    conn = get_db_connection()
-    
-    if request.method == 'POST':
-        data = request.json
+    try:
+        conn = get_db_connection()
         
-        # Clear existing home office setup
-        conn.execute('DELETE FROM home_office')
-        
-        if data['method'] == 'simplified':
-            square_feet = int(data['square_feet'])
-            annual_deduction = min(square_feet * 5, 1500)  # $5 per sq ft, max $1500
+        if request.method == 'POST':
+            data = request.json
             
-            conn.execute('''
-                INSERT INTO home_office (method, square_feet, annual_deduction)
-                VALUES (?, ?, ?)
-            ''', ('simplified', square_feet, annual_deduction))
-        
-        else:  # actual method
-            home_sq_ft = int(data['home_square_feet'])
-            office_sq_ft = int(data['office_square_feet'])
-            business_percentage = round((office_sq_ft / home_sq_ft) * 100, 2)
+            # Clear existing home office setup
+            conn.execute('DELETE FROM home_office')
             
-            conn.execute('''
-                INSERT INTO home_office (method, square_feet, home_square_feet, business_percentage, annual_deduction)
-                VALUES (?, ?, ?, ?, ?)
-            ''', ('actual', office_sq_ft, home_sq_ft, business_percentage, 0))
+            if data['method'] == 'simplified':
+                square_feet = int(data['square_feet'])
+                annual_deduction = min(square_feet * 5, 1500)  # $5 per sq ft, max $1500
+                
+                conn.execute('''
+                    INSERT INTO home_office (method, square_feet, annual_deduction)
+                    VALUES (?, ?, ?)
+                ''', ('simplified', square_feet, annual_deduction))
+            
+            else:  # actual method
+                home_sq_ft = int(data['home_square_feet'])
+                office_sq_ft = int(data['office_square_feet'])
+                business_percentage = round((office_sq_ft / home_sq_ft) * 100, 2)
+                
+                conn.execute('''
+                    INSERT INTO home_office (method, square_feet, home_square_feet, business_percentage, annual_deduction)
+                    VALUES (?, ?, ?, ?, ?)
+                ''', ('actual', office_sq_ft, home_sq_ft, business_percentage, 0))
+            
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True})
         
-        conn.commit()
-        conn.close()
-        
-        return jsonify({'success': True})
-    
-    else:
-        home_office = conn.execute(
-            'SELECT * FROM home_office ORDER BY created_at DESC LIMIT 1'
-        ).fetchone()
-        
-        conn.close()
-        
-        if home_office:
-            return jsonify(dict(home_office))
         else:
-            return jsonify({})
+            home_office = conn.execute(
+                'SELECT * FROM home_office ORDER BY created_at DESC LIMIT 1'
+            ).fetchone()
+            
+            conn.close()
+            
+            if home_office:
+                return jsonify(dict(home_office))
+            else:
+                return jsonify({})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/utilities', methods=['GET', 'POST'])
 def api_utilities():
     """Handle utility expenses"""
-    conn = get_db_connection()
-    
-    if request.method == 'POST':
-        data = request.json
+    try:
+        conn = get_db_connection()
         
-        monthly_amount = float(data['monthly_amount'])
-        business_percentage = float(data['business_percentage'])
-        monthly_deduction = round(monthly_amount * (business_percentage / 100), 2)
-        annual_deduction = monthly_deduction * 12
+        if request.method == 'POST':
+            data = request.json
+            
+            monthly_amount = float(data['monthly_amount'])
+            business_percentage = float(data['business_percentage'])
+            monthly_deduction = round(monthly_amount * (business_percentage / 100), 2)
+            annual_deduction = monthly_deduction * 12
+            
+            conn.execute('''
+                INSERT INTO utilities (utility_type, monthly_amount, business_percentage, monthly_deduction, annual_deduction)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (
+                data['utility_type'],
+                monthly_amount,
+                business_percentage,
+                monthly_deduction,
+                annual_deduction
+            ))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True})
         
-        conn.execute('''
-            INSERT INTO utilities (utility_type, monthly_amount, business_percentage, monthly_deduction, annual_deduction)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (
-            data['utility_type'],
-            monthly_amount,
-            business_percentage,
-            monthly_deduction,
-            annual_deduction
-        ))
-        conn.commit()
-        conn.close()
-        
-        return jsonify({'success': True})
-    
-    else:
-        utility_records = conn.execute(
-            'SELECT * FROM utilities ORDER BY created_at DESC'
-        ).fetchall()
-        
-        conn.close()
-        
-        return jsonify([dict(row) for row in utility_records])
+        else:
+            utility_records = conn.execute(
+                'SELECT * FROM utilities ORDER BY created_at DESC'
+            ).fetchall()
+            
+            conn.close()
+            
+            return jsonify([dict(row) for row in utility_records])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/tax-settings', methods=['GET', 'POST'])
 def api_tax_settings():
     """Handle tax settings"""
-    conn = get_db_connection()
-    
-    if request.method == 'POST':
-        data = request.json
+    try:
+        conn = get_db_connection()
         
-        # Clear existing settings
-        conn.execute('DELETE FROM tax_settings')
+        if request.method == 'POST':
+            data = request.json
+            
+            # Clear existing settings
+            conn.execute('DELETE FROM tax_settings')
+            
+            conn.execute('''
+                INSERT INTO tax_settings (business_name, tax_year, filing_status, other_income, prior_year_tax)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (
+                data['business_name'],
+                data['tax_year'],
+                data['filing_status'],
+                data.get('other_income', 0),
+                data.get('prior_year_tax', 0)
+            ))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True})
         
-        conn.execute('''
-            INSERT INTO tax_settings (business_name, tax_year, filing_status, other_income, prior_year_tax)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (
-            data['business_name'],
-            data['tax_year'],
-            data['filing_status'],
-            data.get('other_income', 0),
-            data.get('prior_year_tax', 0)
-        ))
-        conn.commit()
-        conn.close()
-        
-        return jsonify({'success': True})
-    
-    else:
-        tax_settings = conn.execute(
-            'SELECT * FROM tax_settings ORDER BY updated_at DESC LIMIT 1'
-        ).fetchone()
-        
-        conn.close()
-        
-        if tax_settings:
-            return jsonify(dict(tax_settings))
         else:
-            return jsonify({})
+            tax_settings = conn.execute(
+                'SELECT * FROM tax_settings ORDER BY updated_at DESC LIMIT 1'
+            ).fetchone()
+            
+            conn.close()
+            
+            if tax_settings:
+                return jsonify(dict(tax_settings))
+            else:
+                return jsonify({})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/tax-payments', methods=['GET', 'POST'])
 def api_tax_payments():
     """Handle tax payments"""
-    conn = get_db_connection()
-    
-    if request.method == 'POST':
-        data = request.json
+    try:
+        conn = get_db_connection()
         
-        conn.execute('''
-            INSERT INTO tax_payments (quarter, amount, payment_date, payment_method, confirmation_number)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (
-            data['quarter'],
-            data['amount'],
-            data['payment_date'],
-            data.get('payment_method', ''),
-            data.get('confirmation_number', '')
-        ))
-        conn.commit()
-        conn.close()
+        if request.method == 'POST':
+            data = request.json
+            
+            conn.execute('''
+                INSERT INTO tax_payments (quarter, amount, payment_date, payment_method, confirmation_number)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (
+                data['quarter'],
+                data['amount'],
+                data['payment_date'],
+                data.get('payment_method', ''),
+                data.get('confirmation_number', '')
+            ))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True})
         
-        return jsonify({'success': True})
-    
-    else:
-        payment_records = conn.execute(
-            'SELECT * FROM tax_payments ORDER BY payment_date DESC'
-        ).fetchall()
-        
-        conn.close()
-        
-        return jsonify([dict(row) for row in payment_records])
+        else:
+            payment_records = conn.execute(
+                'SELECT * FROM tax_payments ORDER BY payment_date DESC'
+            ).fetchall()
+            
+            conn.close()
+            
+            return jsonify([dict(row) for row in payment_records])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/savings-goals', methods=['GET', 'POST'])
 def api_savings_goals():
     """Handle savings goals"""
-    conn = get_db_connection()
-    
-    if request.method == 'POST':
-        data = request.json
+    try:
+        conn = get_db_connection()
         
-        conn.execute('''
-            INSERT INTO savings_goals (goal_name, target_amount, current_amount, target_date, goal_type)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (
-            data['goal_name'],
-            data['target_amount'],
-            data.get('current_amount', 0),
-            data.get('target_date'),
-            data.get('goal_type', 'general')
-        ))
-        conn.commit()
-        conn.close()
+        if request.method == 'POST':
+            data = request.json
+            
+            conn.execute('''
+                INSERT INTO savings_goals (goal_name, target_amount, current_amount, target_date, goal_type)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (
+                data['goal_name'],
+                data['target_amount'],
+                data.get('current_amount', 0),
+                data.get('target_date'),
+                data.get('goal_type', 'general')
+            ))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True})
         
-        return jsonify({'success': True})
-    
-    else:
-        goal_records = conn.execute(
-            'SELECT * FROM savings_goals ORDER BY created_at DESC'
-        ).fetchall()
-        
-        conn.close()
-        
-        return jsonify([dict(row) for row in goal_records])
+        else:
+            goal_records = conn.execute(
+                'SELECT * FROM savings_goals ORDER BY created_at DESC'
+            ).fetchall()
+            
+            conn.close()
+            
+            return jsonify([dict(row) for row in goal_records])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 def open_browser():
     """Open browser after a short delay"""
