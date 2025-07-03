@@ -1198,7 +1198,7 @@
 
       // Initialize the app
       document.addEventListener("DOMContentLoaded", function () {
-        const today = new Date().toISOString().split("T")[0];
+        const today = getTodayLocalDate();
         document.getElementById("income-date").value = today;
         document.getElementById("expense-date").value = today;
         document.getElementById("mileage-date").value = today;
@@ -1326,11 +1326,23 @@
       }
 
       function formatDate(dateString) {
-        return new Date(dateString).toLocaleDateString("en-US", {
+        // Split the date string to avoid timezone conversion
+        const [year, month, day] = dateString.split("-");
+        const date = new Date(year, month - 1, day); // month is 0-indexed
+
+        return date.toLocaleDateString("en-US", {
           year: "numeric",
           month: "short",
           day: "numeric",
         });
+      }
+
+      function getTodayLocalDate() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, "0");
+        const day = String(today.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
       }
 
       // Date validation function
@@ -1389,7 +1401,7 @@
           });
 
           // Reset dates to today for relevant forms
-          const today = new Date().toISOString().split("T")[0];
+          const today = getTodayLocalDate();
           const dateFields = {
             "income-form": "income-date",
             "expense-form": "expense-date",
@@ -2830,10 +2842,7 @@
         const result = await apiCall("tax-payments", "POST", formData);
 
         if (result.success) {
-          document.getElementById("tax-payment-form").reset();
-          document.getElementById("payment-date").value = new Date()
-            .toISOString()
-            .split("T")[0];
+          resetFormCompletely("tax-payment-form");
           showNotification("Tax payment recorded successfully!", "success");
           loadTaxPayments();
           if (currentTab === "overview") loadOverviewData();

@@ -2,6 +2,7 @@
 """
 Business Finance Manager - Schedule C Tax Tracking
 Flask Backend Application with Complete CRUD Operations
+Fixed Date Handling to Prevent Timezone Issues
 """
 
 from flask import Flask, render_template, request, jsonify
@@ -15,6 +16,24 @@ app = Flask(__name__)
 
 # Database setup
 DATABASE = 'business_finance.db'
+
+def parse_date_safely(date_str):
+    """Parse date string to date object to avoid timezone issues"""
+    if not date_str:
+        return None
+    
+    # Handle HTML date input format (YYYY-MM-DD)
+    try:
+        # Parse as date object directly to avoid timezone conversion
+        parsed_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        return parsed_date
+    except ValueError:
+        try:
+            # Try MM/DD/YYYY format as fallback
+            parsed_date = datetime.strptime(date_str, '%m/%d/%Y').date()
+            return parsed_date
+        except ValueError:
+            return None
 
 def init_db():
     """Initialize the database with required tables"""
@@ -279,6 +298,11 @@ def api_income():
         if request.method == 'POST':
             data = request.json
             
+            # Parse date safely to avoid timezone issues
+            income_date = parse_date_safely(data['date'])
+            if not income_date:
+                return jsonify({'error': 'Invalid date format'}), 400
+            
             conn.execute('''
                 INSERT INTO income (client, service_type, amount, date, expects_1099, notes)
                 VALUES (?, ?, ?, ?, ?, ?)
@@ -286,7 +310,7 @@ def api_income():
                 data['client'],
                 data['service_type'],
                 data['amount'],
-                data['date'],
+                income_date,
                 data['expects_1099'],
                 data.get('notes', '')
             ))
@@ -326,6 +350,11 @@ def api_income_modify(record_id):
         elif request.method == 'PUT':
             data = request.json
             
+            # Parse date safely to avoid timezone issues
+            income_date = parse_date_safely(data['date'])
+            if not income_date:
+                return jsonify({'error': 'Invalid date format'}), 400
+            
             conn.execute('''
                 UPDATE income 
                 SET client = ?, service_type = ?, amount = ?, date = ?, expects_1099 = ?, notes = ?
@@ -334,7 +363,7 @@ def api_income_modify(record_id):
                 data['client'],
                 data['service_type'],
                 data['amount'],
-                data['date'],
+                income_date,
                 data['expects_1099'],
                 data.get('notes', ''),
                 record_id
@@ -363,6 +392,11 @@ def api_expenses():
         if request.method == 'POST':
             data = request.json
             
+            # Parse date safely to avoid timezone issues
+            expense_date = parse_date_safely(data['date'])
+            if not expense_date:
+                return jsonify({'error': 'Invalid date format'}), 400
+            
             conn.execute('''
                 INSERT INTO expenses (category, description, amount, date, business_purpose)
                 VALUES (?, ?, ?, ?, ?)
@@ -370,7 +404,7 @@ def api_expenses():
                 data['category'],
                 data['description'],
                 data['amount'],
-                data['date'],
+                expense_date,
                 data['business_purpose']
             ))
             conn.commit()
@@ -409,6 +443,11 @@ def api_expenses_modify(record_id):
         elif request.method == 'PUT':
             data = request.json
             
+            # Parse date safely to avoid timezone issues
+            expense_date = parse_date_safely(data['date'])
+            if not expense_date:
+                return jsonify({'error': 'Invalid date format'}), 400
+            
             conn.execute('''
                 UPDATE expenses 
                 SET category = ?, description = ?, amount = ?, date = ?, business_purpose = ?
@@ -417,7 +456,7 @@ def api_expenses_modify(record_id):
                 data['category'],
                 data['description'],
                 data['amount'],
-                data['date'],
+                expense_date,
                 data['business_purpose'],
                 record_id
             ))
@@ -445,6 +484,11 @@ def api_mileage():
         if request.method == 'POST':
             data = request.json
             
+            # Parse date safely to avoid timezone issues
+            mileage_date = parse_date_safely(data['date'])
+            if not mileage_date:
+                return jsonify({'error': 'Invalid date format'}), 400
+            
             # Calculate deduction (2024 IRS rate: $0.67 per mile)
             miles = float(data['miles'])
             deduction = round(miles * 0.67, 2)
@@ -457,7 +501,7 @@ def api_mileage():
                 data['destination'],
                 data['miles'],
                 data['business_purpose'],
-                data['date'],
+                mileage_date,
                 deduction
             ))
             conn.commit()
@@ -496,6 +540,11 @@ def api_mileage_modify(record_id):
         elif request.method == 'PUT':
             data = request.json
             
+            # Parse date safely to avoid timezone issues
+            mileage_date = parse_date_safely(data['date'])
+            if not mileage_date:
+                return jsonify({'error': 'Invalid date format'}), 400
+            
             # Recalculate deduction with updated miles
             miles = float(data['miles'])
             deduction = round(miles * 0.67, 2)
@@ -509,7 +558,7 @@ def api_mileage_modify(record_id):
                 data['destination'],
                 data['miles'],
                 data['business_purpose'],
-                data['date'],
+                mileage_date,
                 deduction,
                 record_id
             ))
@@ -723,13 +772,18 @@ def api_tax_payments():
         if request.method == 'POST':
             data = request.json
             
+            # Parse date safely to avoid timezone issues
+            payment_date = parse_date_safely(data['payment_date'])
+            if not payment_date:
+                return jsonify({'error': 'Invalid date format'}), 400
+            
             conn.execute('''
                 INSERT INTO tax_payments (quarter, amount, payment_date, payment_method, confirmation_number)
                 VALUES (?, ?, ?, ?, ?)
             ''', (
                 data['quarter'],
                 data['amount'],
-                data['payment_date'],
+                payment_date,
                 data.get('payment_method', ''),
                 data.get('confirmation_number', '')
             ))
@@ -769,6 +823,11 @@ def api_tax_payments_modify(record_id):
         elif request.method == 'PUT':
             data = request.json
             
+            # Parse date safely to avoid timezone issues
+            payment_date = parse_date_safely(data['payment_date'])
+            if not payment_date:
+                return jsonify({'error': 'Invalid date format'}), 400
+            
             conn.execute('''
                 UPDATE tax_payments 
                 SET quarter = ?, amount = ?, payment_date = ?, payment_method = ?, confirmation_number = ?
@@ -776,7 +835,7 @@ def api_tax_payments_modify(record_id):
             ''', (
                 data['quarter'],
                 data['amount'],
-                data['payment_date'],
+                payment_date,
                 data.get('payment_method', ''),
                 data.get('confirmation_number', ''),
                 record_id
@@ -805,6 +864,13 @@ def api_savings_goals():
         if request.method == 'POST':
             data = request.json
             
+            # Parse target date safely (optional field)
+            target_date = None
+            if data.get('target_date'):
+                target_date = parse_date_safely(data['target_date'])
+                if not target_date:
+                    return jsonify({'error': 'Invalid target date format'}), 400
+            
             conn.execute('''
                 INSERT INTO savings_goals (goal_name, target_amount, current_amount, target_date, goal_type)
                 VALUES (?, ?, ?, ?, ?)
@@ -812,7 +878,7 @@ def api_savings_goals():
                 data['goal_name'],
                 data['target_amount'],
                 data.get('current_amount', 0),
-                data.get('target_date'),
+                target_date,
                 data.get('goal_type', 'general')
             ))
             conn.commit()
@@ -851,6 +917,13 @@ def api_savings_goals_modify(record_id):
         elif request.method == 'PUT':
             data = request.json
             
+            # Parse target date safely (optional field)
+            target_date = None
+            if data.get('target_date'):
+                target_date = parse_date_safely(data['target_date'])
+                if not target_date:
+                    return jsonify({'error': 'Invalid target date format'}), 400
+            
             conn.execute('''
                 UPDATE savings_goals 
                 SET goal_name = ?, target_amount = ?, current_amount = ?, target_date = ?, goal_type = ?
@@ -859,7 +932,7 @@ def api_savings_goals_modify(record_id):
                 data['goal_name'],
                 data['target_amount'],
                 data.get('current_amount', 0),
-                data.get('target_date'),
+                target_date,
                 data.get('goal_type', 'general'),
                 record_id
             ))
