@@ -527,7 +527,100 @@ def api_mileage_modify(record_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# ===== OTHER ENDPOINTS (unchanged) =====
+# ===== UTILITY ENDPOINTS =====
+@app.route('/api/utilities', methods=['GET', 'POST'])
+def api_utilities():
+    """Handle utility expenses"""
+    try:
+        conn = get_db_connection()
+        
+        if request.method == 'POST':
+            data = request.json
+            
+            monthly_amount = float(data['monthly_amount'])
+            business_percentage = float(data['business_percentage'])
+            monthly_deduction = round(monthly_amount * (business_percentage / 100), 2)
+            annual_deduction = monthly_deduction * 12
+            
+            conn.execute('''
+                INSERT INTO utilities (utility_type, monthly_amount, business_percentage, monthly_deduction, annual_deduction)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (
+                data['utility_type'],
+                monthly_amount,
+                business_percentage,
+                monthly_deduction,
+                annual_deduction
+            ))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True})
+        
+        else:
+            utility_records = conn.execute(
+                'SELECT * FROM utilities ORDER BY created_at DESC'
+            ).fetchall()
+            
+            conn.close()
+            
+            return jsonify([dict(row) for row in utility_records])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/utilities/<int:record_id>', methods=['GET', 'PUT', 'DELETE'])
+def api_utilities_modify(record_id):
+    """Handle utility view/edit/delete operations"""
+    try:
+        conn = get_db_connection()
+        
+        if request.method == 'GET':
+            record = conn.execute(
+                'SELECT * FROM utilities WHERE id = ?', (record_id,)
+            ).fetchone()
+            conn.close()
+            
+            if record:
+                return jsonify(dict(record))
+            else:
+                return jsonify({'error': 'Record not found'}), 404
+        
+        elif request.method == 'PUT':
+            data = request.json
+            
+            monthly_amount = float(data['monthly_amount'])
+            business_percentage = float(data['business_percentage'])
+            monthly_deduction = round(monthly_amount * (business_percentage / 100), 2)
+            annual_deduction = monthly_deduction * 12
+            
+            conn.execute('''
+                UPDATE utilities 
+                SET utility_type = ?, monthly_amount = ?, business_percentage = ?, 
+                    monthly_deduction = ?, annual_deduction = ?
+                WHERE id = ?
+            ''', (
+                data['utility_type'],
+                monthly_amount,
+                business_percentage,
+                monthly_deduction,
+                annual_deduction,
+                record_id
+            ))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True})
+        
+        elif request.method == 'DELETE':
+            conn.execute('DELETE FROM utilities WHERE id = ?', (record_id,))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ===== HOME OFFICE ENDPOINTS =====
 @app.route('/api/home-office', methods=['GET', 'POST'])
 def api_home_office():
     """Handle home office deduction"""
@@ -578,46 +671,7 @@ def api_home_office():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/utilities', methods=['GET', 'POST'])
-def api_utilities():
-    """Handle utility expenses"""
-    try:
-        conn = get_db_connection()
-        
-        if request.method == 'POST':
-            data = request.json
-            
-            monthly_amount = float(data['monthly_amount'])
-            business_percentage = float(data['business_percentage'])
-            monthly_deduction = round(monthly_amount * (business_percentage / 100), 2)
-            annual_deduction = monthly_deduction * 12
-            
-            conn.execute('''
-                INSERT INTO utilities (utility_type, monthly_amount, business_percentage, monthly_deduction, annual_deduction)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (
-                data['utility_type'],
-                monthly_amount,
-                business_percentage,
-                monthly_deduction,
-                annual_deduction
-            ))
-            conn.commit()
-            conn.close()
-            
-            return jsonify({'success': True})
-        
-        else:
-            utility_records = conn.execute(
-                'SELECT * FROM utilities ORDER BY created_at DESC'
-            ).fetchall()
-            
-            conn.close()
-            
-            return jsonify([dict(row) for row in utility_records])
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
+# ===== TAX SETTINGS ENDPOINTS =====
 @app.route('/api/tax-settings', methods=['GET', 'POST'])
 def api_tax_settings():
     """Handle tax settings"""
@@ -659,6 +713,7 @@ def api_tax_settings():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# ===== TAX PAYMENT ENDPOINTS =====
 @app.route('/api/tax-payments', methods=['GET', 'POST'])
 def api_tax_payments():
     """Handle tax payments"""
@@ -694,6 +749,53 @@ def api_tax_payments():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/tax-payments/<int:record_id>', methods=['GET', 'PUT', 'DELETE'])
+def api_tax_payments_modify(record_id):
+    """Handle tax payment view/edit/delete operations"""
+    try:
+        conn = get_db_connection()
+        
+        if request.method == 'GET':
+            record = conn.execute(
+                'SELECT * FROM tax_payments WHERE id = ?', (record_id,)
+            ).fetchone()
+            conn.close()
+            
+            if record:
+                return jsonify(dict(record))
+            else:
+                return jsonify({'error': 'Record not found'}), 404
+        
+        elif request.method == 'PUT':
+            data = request.json
+            
+            conn.execute('''
+                UPDATE tax_payments 
+                SET quarter = ?, amount = ?, payment_date = ?, payment_method = ?, confirmation_number = ?
+                WHERE id = ?
+            ''', (
+                data['quarter'],
+                data['amount'],
+                data['payment_date'],
+                data.get('payment_method', ''),
+                data.get('confirmation_number', ''),
+                record_id
+            ))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True})
+        
+        elif request.method == 'DELETE':
+            conn.execute('DELETE FROM tax_payments WHERE id = ?', (record_id,))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ===== SAVINGS GOALS ENDPOINTS =====
 @app.route('/api/savings-goals', methods=['GET', 'POST'])
 def api_savings_goals():
     """Handle savings goals"""
@@ -726,6 +828,52 @@ def api_savings_goals():
             conn.close()
             
             return jsonify([dict(row) for row in goal_records])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/savings-goals/<int:record_id>', methods=['GET', 'PUT', 'DELETE'])
+def api_savings_goals_modify(record_id):
+    """Handle savings goal view/edit/delete operations"""
+    try:
+        conn = get_db_connection()
+        
+        if request.method == 'GET':
+            record = conn.execute(
+                'SELECT * FROM savings_goals WHERE id = ?', (record_id,)
+            ).fetchone()
+            conn.close()
+            
+            if record:
+                return jsonify(dict(record))
+            else:
+                return jsonify({'error': 'Record not found'}), 404
+        
+        elif request.method == 'PUT':
+            data = request.json
+            
+            conn.execute('''
+                UPDATE savings_goals 
+                SET goal_name = ?, target_amount = ?, current_amount = ?, target_date = ?, goal_type = ?
+                WHERE id = ?
+            ''', (
+                data['goal_name'],
+                data['target_amount'],
+                data.get('current_amount', 0),
+                data.get('target_date'),
+                data.get('goal_type', 'general'),
+                record_id
+            ))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True})
+        
+        elif request.method == 'DELETE':
+            conn.execute('DELETE FROM savings_goals WHERE id = ?', (record_id,))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
