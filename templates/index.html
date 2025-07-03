@@ -166,8 +166,22 @@
         transform: translateY(0);
       }
 
+      .btn-small {
+        padding: 6px 12px;
+        font-size: 12px;
+        margin: 0 2px;
+      }
+
       .btn-secondary {
         background: linear-gradient(45deg, #6c757d, #495057);
+      }
+
+      .btn-danger {
+        background: linear-gradient(45deg, #dc3545, #c82333);
+      }
+
+      .btn-danger:hover {
+        box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
       }
 
       .card {
@@ -236,6 +250,10 @@
 
       .table tr:hover {
         background: #f8f9fa;
+      }
+
+      .table .actions {
+        white-space: nowrap;
       }
 
       .alert {
@@ -335,6 +353,28 @@
         }
       }
 
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+      }
+
       .home-office-methods {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -357,6 +397,99 @@
 
       .method-card:hover {
         border-color: #667eea;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        animation: fadeIn 0.3s ease;
+      }
+
+      .modal-content {
+        background-color: #fefefe;
+        margin: 5% auto;
+        padding: 0;
+        border: none;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 600px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      }
+
+      .modal-header {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        padding: 20px;
+        border-radius: 12px 12px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .modal-header h3 {
+        margin: 0;
+        color: white;
+      }
+
+      .modal-body {
+        padding: 20px;
+      }
+
+      .modal-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 20px;
+      }
+
+      .close {
+        color: white;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        opacity: 0.8;
+      }
+
+      .close:hover {
+        opacity: 1;
+      }
+
+      /* Confirmation Modal Styles */
+      .confirm-modal .modal-content {
+        max-width: 400px;
+      }
+
+      .confirm-modal .modal-header {
+        background: linear-gradient(45deg, #dc3545, #c82333);
+      }
+
+      .confirm-modal .modal-body {
+        text-align: center;
+        padding: 30px 20px;
+      }
+
+      .confirm-modal .modal-body h4 {
+        margin-bottom: 15px;
+        color: #721c24;
+      }
+
+      .confirm-modal .modal-body p {
+        margin-bottom: 20px;
+        color: #6c757d;
+      }
+
+      /* Goal card actions */
+      .goal-card-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+        justify-content: flex-end;
       }
 
       @media (max-width: 768px) {
@@ -407,19 +540,19 @@
           <button class="tab active" onclick="showTab('overview')">
             📊 Overview
           </button>
-          <button class="tab" onclick="showTab('income')">
+          <button class="tab" onclick="showTab('income', event)">
             💰 Freelance Income
           </button>
-          <button class="tab" onclick="showTab('expenses')">
+          <button class="tab" onclick="showTab('expenses', event)">
             🧾 Business Expenses
           </button>
-          <button class="tab" onclick="showTab('deductions')">
+          <button class="tab" onclick="showTab('deductions', event)">
             📝 Deductions
           </button>
-          <button class="tab" onclick="showTab('taxes')">
+          <button class="tab" onclick="showTab('taxes', event)">
             📋 Schedule C Taxes
           </button>
-          <button class="tab" onclick="showTab('goals')">
+          <button class="tab" onclick="showTab('goals', event)">
             🎯 Savings Goals
           </button>
         </div>
@@ -430,22 +563,14 @@
             Loading overview data...
           </div>
           <div id="overview-content" style="display: none">
-            <div class="stats-grid" id="stats-grid">
-              <!-- Stats will be populated by JavaScript -->
-            </div>
-
+            <div class="stats-grid" id="stats-grid"></div>
             <div class="card">
               <h3>📅 Tax Reminders</h3>
-              <div id="tax-reminders">
-                <!-- Tax reminders will be populated by JavaScript -->
-              </div>
+              <div id="tax-reminders"></div>
             </div>
-
             <div class="card">
               <h3>📈 Recent Activity</h3>
-              <div id="recent-transactions">
-                <!-- Recent transactions will be populated by JavaScript -->
-              </div>
+              <div id="recent-transactions"></div>
             </div>
           </div>
         </div>
@@ -511,7 +636,6 @@
               <button type="submit" class="btn">Add Income</button>
             </form>
           </div>
-
           <div class="card">
             <h3>📋 Income History</h3>
             <div id="income-history">
@@ -587,7 +711,6 @@
               <button type="submit" class="btn">Add Expense</button>
             </form>
           </div>
-
           <div class="card">
             <h3>📋 Expense History</h3>
             <div id="expense-history">
@@ -598,7 +721,6 @@
 
         <!-- Deductions Tab -->
         <div id="deductions" class="tab-content">
-          <!-- Mileage Section -->
           <div class="card">
             <h3>🚗 Vehicle Mileage (IRS Rate: $0.67/mile)</h3>
             <form id="mileage-form" onsubmit="addMileage(event)">
@@ -643,13 +765,11 @@
               </div>
               <button type="submit" class="btn">Add Mileage</button>
             </form>
-
             <div id="mileage-summary">
               <div class="loading">Loading mileage data...</div>
             </div>
           </div>
 
-          <!-- Home Office Section -->
           <div class="card">
             <h3>🏠 Home Office Deduction</h3>
             <div class="home-office-methods">
@@ -674,7 +794,6 @@
                 </p>
               </div>
             </div>
-
             <form
               id="home-office-form"
               onsubmit="setHomeOffice(event)"
@@ -695,7 +814,6 @@
                   >
                 </div>
               </div>
-
               <div id="actual-fields" style="display: none">
                 <div class="form-row">
                   <div class="form-group">
@@ -721,16 +839,13 @@
                   >Use this percentage with your utility expenses below</small
                 >
               </div>
-
               <button type="submit" class="btn">Set Home Office</button>
             </form>
-
             <div id="home-office-summary">
               <div class="loading">Loading home office data...</div>
             </div>
           </div>
 
-          <!-- Utilities Section -->
           <div class="card">
             <h3>⚡ Utility & Home Office Expenses</h3>
             <form id="utility-form" onsubmit="addUtility(event)">
@@ -778,7 +893,6 @@
               </div>
               <button type="submit" class="btn">Add Utility Expense</button>
             </form>
-
             <div id="utility-summary">
               <div class="loading">Loading utility data...</div>
             </div>
@@ -985,21 +1099,141 @@
       </div>
     </div>
 
+    <!-- Detail/Edit Modals -->
+    <div id="detailModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="detailModalTitle">Record Details</h3>
+          <span class="close" onclick="closeModal('detailModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+          <div id="detailContent"></div>
+          <div class="modal-actions">
+            <button class="btn" onclick="editRecord()">✏️ Edit</button>
+            <button class="btn btn-danger" onclick="confirmDelete()">
+              🗑️ Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="editModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="editModalTitle">Edit Record</h3>
+          <span class="close" onclick="closeModal('editModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+          <form id="editForm" onsubmit="saveRecord(event)">
+            <div id="editFormContent"></div>
+            <div class="modal-actions">
+              <button type="submit" class="btn">💾 Save</button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="closeModal('editModal')"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="confirmDeleteModal" class="modal confirm-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Confirm Delete</h3>
+          <span class="close" onclick="closeModal('confirmDeleteModal')"
+            >&times;</span
+          >
+        </div>
+        <div class="modal-body">
+          <h4>⚠️ Are you sure you want to delete this record?</h4>
+
+          <!-- Record details will be shown here -->
+          <div
+            id="deleteRecordDetails"
+            class="card"
+            style="
+              background: #fff3cd;
+              border: 1px solid #ffc107;
+              margin: 15px 0;
+              padding: 15px;
+            "
+          >
+            <!-- Record details will be populated here -->
+          </div>
+
+          <p style="color: #721c24; font-weight: 600">
+            This action cannot be undone. The record will be permanently
+            deleted.
+          </p>
+
+          <div class="modal-actions">
+            <button class="btn btn-danger" onclick="executeDelete()">
+              🗑️ Yes, Delete This Record
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeModal('confirmDeleteModal')"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script>
       // Global variables
       let currentTab = "overview";
       let selectedHomeOfficeMethod = null;
+      let currentRecord = null;
+      let currentRecordType = null;
 
       // Initialize the app
       document.addEventListener("DOMContentLoaded", function () {
-        // Set today's date as default for date inputs
         const today = new Date().toISOString().split("T")[0];
         document.getElementById("income-date").value = today;
         document.getElementById("expense-date").value = today;
         document.getElementById("mileage-date").value = today;
         document.getElementById("payment-date").value = today;
 
-        // Load all data
+        // Income date validation
+        document
+          .getElementById("income-date")
+          .addEventListener("change", function () {
+            validateDate(this);
+          });
+
+        // Expense date validation
+        document
+          .getElementById("expense-date")
+          .addEventListener("change", function () {
+            validateDate(this);
+          });
+
+        // Mileage date validation
+        document
+          .getElementById("mileage-date")
+          .addEventListener("change", function () {
+            validateDate(this);
+          });
+
+        // Payment date validation (allow future dates for scheduled payments)
+        document
+          .getElementById("payment-date")
+          .addEventListener("change", function () {
+            validateDate(this, true); // Allow future dates
+          });
+
+        setupModalClickHandlers();
+
         loadOverviewData();
         loadIncomeData();
         loadExpenseData();
@@ -1012,8 +1246,7 @@
       });
 
       // Tab management
-      function showTab(tabName) {
-        // Hide all tabs
+      function showTab(tabName, event) {
         document.querySelectorAll(".tab-content").forEach((tab) => {
           tab.classList.remove("active");
         });
@@ -1021,19 +1254,24 @@
           tab.classList.remove("active");
         });
 
-        // Show selected tab
         document.getElementById(tabName).classList.add("active");
-        event.target.classList.add("active");
+        if (event && event.target) {
+          event.target.classList.add("active");
+        }
         currentTab = tabName;
 
-        // Refresh data when switching tabs
         if (tabName === "overview") {
           loadOverviewData();
         }
       }
 
-      // API helper function
-      async function apiCall(endpoint, method = "GET", data = null) {
+      // API helper function with timeout handling
+      async function apiCall(
+        endpoint,
+        method = "GET",
+        data = null,
+        timeoutMs = 10000
+      ) {
         try {
           const options = {
             method: method,
@@ -1046,10 +1284,35 @@
             options.body = JSON.stringify(data);
           }
 
-          const response = await fetch(`/api/${endpoint}`, options);
-          return await response.json();
+          // Create timeout promise
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Request timeout")), timeoutMs)
+          );
+
+          // Race between fetch and timeout
+          const response = await Promise.race([
+            fetch(`/api/${endpoint}`, options),
+            timeoutPromise,
+          ]);
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.indexOf("application/json") !== -1) {
+            return await response.json();
+          } else {
+            throw new Error("Response is not JSON");
+          }
         } catch (error) {
           console.error("API call failed:", error);
+          if (error.message === "Request timeout") {
+            return {
+              error:
+                "Request timed out. Please check your connection and try again.",
+            };
+          }
           return { error: error.message };
         }
       }
@@ -1070,105 +1333,944 @@
         });
       }
 
-      // Load overview data
-      async function loadOverviewData() {
-        const data = await apiCall("overview");
+      // Date validation function
+      function validateDate(inputElement, allowFuture = false) {
+        const selectedDate = new Date(inputElement.value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Reset time to compare just dates
 
-        if (data.error) {
-          document.getElementById("overview-content").innerHTML =
-            '<div class="alert alert-danger">Error loading overview data</div>';
-          return;
+        if (!allowFuture && selectedDate > today) {
+          // Show error styling
+          inputElement.style.borderColor = "#dc3545";
+          inputElement.style.boxShadow = "0 0 0 3px rgba(220, 53, 69, 0.1)";
+
+          // Show error message
+          let errorMsg = inputElement.parentNode.querySelector(".date-error");
+          if (!errorMsg) {
+            errorMsg = document.createElement("small");
+            errorMsg.className = "date-error";
+            errorMsg.style.color = "#dc3545";
+            errorMsg.style.display = "block";
+            errorMsg.style.marginTop = "5px";
+            inputElement.parentNode.appendChild(errorMsg);
+          }
+          errorMsg.textContent = "Date cannot be in the future";
+          return false;
+        } else {
+          // Remove error styling
+          inputElement.style.borderColor = "";
+          inputElement.style.boxShadow = "";
+
+          // Remove error message
+          const errorMsg = inputElement.parentNode.querySelector(".date-error");
+          if (errorMsg) {
+            errorMsg.remove();
+          }
+          return true;
+        }
+      }
+
+      // Enhanced form reset function with validation cleanup
+      function resetFormCompletely(formId) {
+        const form = document.getElementById(formId);
+        if (form) {
+          // Standard form reset
+          form.reset();
+
+          // Clear any validation error messages
+          form
+            .querySelectorAll(".date-error")
+            .forEach((error) => error.remove());
+
+          // Reset input styling from validation errors
+          form.querySelectorAll("input, select, textarea").forEach((input) => {
+            input.style.borderColor = "";
+            input.style.boxShadow = "";
+          });
+
+          // Reset dates to today for relevant forms
+          const today = new Date().toISOString().split("T")[0];
+          const dateFields = {
+            "income-form": "income-date",
+            "expense-form": "expense-date",
+            "mileage-form": "mileage-date",
+            "tax-payment-form": "payment-date",
+          };
+
+          if (dateFields[formId]) {
+            const dateInput = document.getElementById(dateFields[formId]);
+            if (dateInput) {
+              dateInput.value = today;
+            }
+          }
+
+          // Reset specific form elements to default values
+          if (formId === "goal-form") {
+            const currentAmountInput =
+              document.getElementById("current-amount");
+            if (currentAmountInput) {
+              currentAmountInput.value = "0";
+            }
+          }
+        }
+      }
+
+      // Modal management
+      function showRecordDetails(recordType, recordId) {
+        currentRecord = recordId;
+        currentRecordType = recordType;
+
+        apiCall(`${recordType}/${recordId}`)
+          .then((data) => {
+            if (data.error) {
+              alert("Error loading record details: " + data.error);
+              return;
+            }
+
+            let content = "";
+            if (recordType === "income") {
+              content = `
+                <p><strong>Client:</strong> ${data.client}</p>
+                <p><strong>Service:</strong> ${data.service_type}</p>
+                <p><strong>Amount:</strong> ${formatCurrency(data.amount)}</p>
+                <p><strong>Date:</strong> ${formatDate(data.date)}</p>
+                <p><strong>1099 Expected:</strong> ${
+                  data.expects_1099 ? "Yes" : "No"
+                }</p>
+                <p><strong>Notes:</strong> ${data.notes || "None"}</p>
+              `;
+            } else if (recordType === "expenses") {
+              content = `
+                <p><strong>Category:</strong> ${data.category}</p>
+                <p><strong>Description:</strong> ${data.description}</p>
+                <p><strong>Amount:</strong> ${formatCurrency(data.amount)}</p>
+                <p><strong>Date:</strong> ${formatDate(data.date)}</p>
+                <p><strong>Business Purpose:</strong> ${
+                  data.business_purpose
+                }</p>
+              `;
+            } else if (recordType === "mileage") {
+              content = `
+                <p><strong>Trip:</strong> ${data.start_location} → ${
+                data.destination
+              }</p>
+                <p><strong>Miles:</strong> ${data.miles}</p>
+                <p><strong>Date:</strong> ${formatDate(data.date)}</p>
+                <p><strong>Purpose:</strong> ${data.business_purpose}</p>
+                <p><strong>Deduction:</strong> ${formatCurrency(
+                  data.deduction_amount
+                )}</p>
+              `;
+            } else if (recordType === "utilities") {
+              content = `
+                <p><strong>Utility Type:</strong> ${data.utility_type}</p>
+                <p><strong>Monthly Amount:</strong> ${formatCurrency(
+                  data.monthly_amount
+                )}</p>
+                <p><strong>Business Percentage:</strong> ${
+                  data.business_percentage
+                }%</p>
+                <p><strong>Monthly Deduction:</strong> ${formatCurrency(
+                  data.monthly_deduction
+                )}</p>
+                <p><strong>Annual Deduction:</strong> ${formatCurrency(
+                  data.annual_deduction
+                )}</p>
+              `;
+            } else if (recordType === "tax-payments") {
+              content = `
+                <p><strong>Quarter:</strong> ${data.quarter}</p>
+                <p><strong>Amount:</strong> ${formatCurrency(data.amount)}</p>
+                <p><strong>Payment Date:</strong> ${formatDate(
+                  data.payment_date
+                )}</p>
+                <p><strong>Payment Method:</strong> ${
+                  data.payment_method || "N/A"
+                }</p>
+                <p><strong>Confirmation Number:</strong> ${
+                  data.confirmation_number || "N/A"
+                }</p>
+              `;
+            } else if (recordType === "savings-goals") {
+              const progress = (data.current_amount / data.target_amount) * 100;
+              const remaining = data.target_amount - data.current_amount;
+              content = `
+                <p><strong>Goal Name:</strong> ${data.goal_name}</p>
+                <p><strong>Type:</strong> ${data.goal_type
+                  .replace("-", " ")
+                  .replace(/\b\w/g, (l) => l.toUpperCase())}</p>
+                <p><strong>Target:</strong> ${formatCurrency(
+                  data.target_amount
+                )}</p>
+                <p><strong>Current:</strong> ${formatCurrency(
+                  data.current_amount
+                )}</p>
+                <p><strong>Remaining:</strong> ${formatCurrency(remaining)}</p>
+                <p><strong>Progress:</strong> ${progress.toFixed(1)}%</p>
+                ${
+                  data.target_date
+                    ? `<p><strong>Target Date:</strong> ${formatDate(
+                        data.target_date
+                      )}</p>`
+                    : ""
+                }
+              `;
+            }
+
+            document.getElementById("detailContent").innerHTML = content;
+            document.getElementById("detailModalTitle").textContent = `${
+              recordType.charAt(0).toUpperCase() + recordType.slice(1)
+            } Details`;
+            document.getElementById("detailModal").style.display = "block";
+          })
+          .catch((error) => {
+            alert("Error loading record details: " + error.message);
+          });
+      }
+
+      // Direct edit function
+      function editRecordDirect(recordType, recordId) {
+        currentRecord = recordId;
+        currentRecordType = recordType;
+        editRecord();
+      }
+
+      // Direct delete function
+      function deleteRecordDirect(recordType, recordId) {
+        currentRecord = recordId;
+        currentRecordType = recordType;
+        confirmDelete();
+      }
+
+      function editRecord() {
+        if (!currentRecord || !currentRecordType) return;
+
+        apiCall(`${currentRecordType}/${currentRecord}`)
+          .then((data) => {
+            if (data.error) {
+              alert("Error loading record for edit: " + data.error);
+              return;
+            }
+
+            let formContent = "";
+            if (currentRecordType === "income") {
+              formContent = `
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="edit-client">Client/Company:</label>
+                    <input type="text" id="edit-client" value="${
+                      data.client
+                    }" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="edit-service-type">Service Type:</label>
+                    <select id="edit-service-type" required>
+                      <option value="Consulting" ${
+                        data.service_type === "Consulting" ? "selected" : ""
+                      }>Consulting</option>
+                      <option value="Web Development" ${
+                        data.service_type === "Web Development"
+                          ? "selected"
+                          : ""
+                      }>Web Development</option>
+                      <option value="Graphic Design" ${
+                        data.service_type === "Graphic Design" ? "selected" : ""
+                      }>Graphic Design</option>
+                      <option value="Writing" ${
+                        data.service_type === "Writing" ? "selected" : ""
+                      }>Writing</option>
+                      <option value="Marketing" ${
+                        data.service_type === "Marketing" ? "selected" : ""
+                      }>Marketing</option>
+                      <option value="Training" ${
+                        data.service_type === "Training" ? "selected" : ""
+                      }>Training</option>
+                      <option value="Other" ${
+                        data.service_type === "Other" ? "selected" : ""
+                      }>Other</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="edit-amount">Amount ($):</label>
+                    <input type="number" id="edit-amount" step="0.01" value="${
+                      data.amount
+                    }" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="edit-date">Date:</label>
+                    <input type="date" id="edit-date" value="${
+                      data.date
+                    }" required />
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="edit-expects-1099">Expects 1099?</label>
+                    <select id="edit-expects-1099" required>
+                      <option value="true" ${
+                        data.expects_1099 ? "selected" : ""
+                      }>Yes</option>
+                      <option value="false" ${
+                        !data.expects_1099 ? "selected" : ""
+                      }>No</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="edit-notes">Notes:</label>
+                    <input type="text" id="edit-notes" value="${
+                      data.notes || ""
+                    }" />
+                  </div>
+                </div>
+              `;
+            } else if (currentRecordType === "expenses") {
+              formContent = `
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="edit-category">Category:</label>
+                    <select id="edit-category" required>
+                      <option value="Advertising" ${
+                        data.category === "Advertising" ? "selected" : ""
+                      }>Advertising</option>
+                      <option value="Office Expenses" ${
+                        data.category === "Office Expenses" ? "selected" : ""
+                      }>Office Expenses</option>
+                      <option value="Professional Services" ${
+                        data.category === "Professional Services"
+                          ? "selected"
+                          : ""
+                      }>Professional Services</option>
+                      <option value="Software/Subscriptions" ${
+                        data.category === "Software/Subscriptions"
+                          ? "selected"
+                          : ""
+                      }>Software/Subscriptions</option>
+                      <option value="Equipment" ${
+                        data.category === "Equipment" ? "selected" : ""
+                      }>Equipment</option>
+                      <option value="Travel" ${
+                        data.category === "Travel" ? "selected" : ""
+                      }>Travel</option>
+                      <option value="Meals" ${
+                        data.category === "Meals" ? "selected" : ""
+                      }>Meals (50% deductible)</option>
+                      <option value="Insurance" ${
+                        data.category === "Insurance" ? "selected" : ""
+                      }>Insurance</option>
+                      <option value="Legal/Professional" ${
+                        data.category === "Legal/Professional" ? "selected" : ""
+                      }>Legal/Professional</option>
+                      <option value="Other" ${
+                        data.category === "Other" ? "selected" : ""
+                      }>Other</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="edit-description">Description:</label>
+                    <input type="text" id="edit-description" value="${
+                      data.description
+                    }" required />
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="edit-amount">Amount ($):</label>
+                    <input type="number" id="edit-amount" step="0.01" value="${
+                      data.amount
+                    }" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="edit-date">Date:</label>
+                    <input type="date" id="edit-date" value="${
+                      data.date
+                    }" required />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="edit-business-purpose">Business Purpose:</label>
+                  <textarea id="edit-business-purpose" required>${
+                    data.business_purpose
+                  }</textarea>
+                </div>
+              `;
+            } else if (currentRecordType === "mileage") {
+              formContent = `
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="edit-start-location">From:</label>
+                    <input type="text" id="edit-start-location" value="${data.start_location}" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="edit-destination">To:</label>
+                    <input type="text" id="edit-destination" value="${data.destination}" required />
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="edit-miles">Miles:</label>
+                    <input type="number" id="edit-miles" step="0.1" value="${data.miles}" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="edit-date">Date:</label>
+                    <input type="date" id="edit-date" value="${data.date}" required />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="edit-business-purpose">Business Purpose:</label>
+                  <input type="text" id="edit-business-purpose" value="${data.business_purpose}" required />
+                </div>
+              `;
+            } else if (currentRecordType === "utilities") {
+              formContent = `
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="edit-utility-type">Utility Type:</label>
+                    <select id="edit-utility-type" required>
+                      <option value="Electricity" ${
+                        data.utility_type === "Electricity" ? "selected" : ""
+                      }>Electricity</option>
+                      <option value="Gas" ${
+                        data.utility_type === "Gas" ? "selected" : ""
+                      }>Gas</option>
+                      <option value="Water" ${
+                        data.utility_type === "Water" ? "selected" : ""
+                      }>Water</option>
+                      <option value="Internet" ${
+                        data.utility_type === "Internet" ? "selected" : ""
+                      }>Internet</option>
+                      <option value="Phone" ${
+                        data.utility_type === "Phone" ? "selected" : ""
+                      }>Phone</option>
+                      <option value="Insurance" ${
+                        data.utility_type === "Insurance" ? "selected" : ""
+                      }>Home Insurance</option>
+                      <option value="Property Tax" ${
+                        data.utility_type === "Property Tax" ? "selected" : ""
+                      }>Property Tax</option>
+                      <option value="Maintenance" ${
+                        data.utility_type === "Maintenance" ? "selected" : ""
+                      }>Home Maintenance</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="edit-monthly-amount">Monthly Amount ($):</label>
+                    <input type="number" id="edit-monthly-amount" step="0.01" value="${
+                      data.monthly_amount
+                    }" required />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="edit-business-percentage">Business Use Percentage (%):</label>
+                  <input type="number" id="edit-business-percentage" min="0" max="100" value="${
+                    data.business_percentage
+                  }" required />
+                </div>
+              `;
+            } else if (currentRecordType === "tax-payments") {
+              formContent = `
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="edit-quarter">Quarter:</label>
+                    <select id="edit-quarter" required>
+                      <option value="Q1" ${
+                        data.quarter === "Q1" ? "selected" : ""
+                      }>Q1 (Due April 15)</option>
+                      <option value="Q2" ${
+                        data.quarter === "Q2" ? "selected" : ""
+                      }>Q2 (Due June 15)</option>
+                      <option value="Q3" ${
+                        data.quarter === "Q3" ? "selected" : ""
+                      }>Q3 (Due September 15)</option>
+                      <option value="Q4" ${
+                        data.quarter === "Q4" ? "selected" : ""
+                      }>Q4 (Due January 15)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="edit-payment-amount">Amount Paid ($):</label>
+                    <input type="number" id="edit-payment-amount" step="0.01" value="${
+                      data.amount
+                    }" required />
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="edit-payment-date">Payment Date:</label>
+                    <input type="date" id="edit-payment-date" value="${
+                      data.payment_date
+                    }" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="edit-payment-method">Payment Method:</label>
+                    <select id="edit-payment-method">
+                      <option value="" ${
+                        !data.payment_method ? "selected" : ""
+                      }>Select method...</option>
+                      <option value="EFTPS" ${
+                        data.payment_method === "EFTPS" ? "selected" : ""
+                      }>EFTPS</option>
+                      <option value="Online" ${
+                        data.payment_method === "Online" ? "selected" : ""
+                      }>Online Banking</option>
+                      <option value="Check" ${
+                        data.payment_method === "Check" ? "selected" : ""
+                      }>Check</option>
+                      <option value="Wire" ${
+                        data.payment_method === "Wire" ? "selected" : ""
+                      }>Wire Transfer</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="edit-confirmation-number">Confirmation Number:</label>
+                  <input type="text" id="edit-confirmation-number" value="${
+                    data.confirmation_number || ""
+                  }" />
+                </div>
+              `;
+            } else if (currentRecordType === "savings-goals") {
+              formContent = `
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="edit-goal-name">Goal Name:</label>
+                    <input type="text" id="edit-goal-name" value="${
+                      data.goal_name
+                    }" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="edit-goal-type">Goal Type:</label>
+                    <select id="edit-goal-type" required>
+                      <option value="emergency" ${
+                        data.goal_type === "emergency" ? "selected" : ""
+                      }>Emergency Fund</option>
+                      <option value="equipment" ${
+                        data.goal_type === "equipment" ? "selected" : ""
+                      }>Equipment</option>
+                      <option value="tax-reserve" ${
+                        data.goal_type === "tax-reserve" ? "selected" : ""
+                      }>Tax Reserve</option>
+                      <option value="expansion" ${
+                        data.goal_type === "expansion" ? "selected" : ""
+                      }>Business Expansion</option>
+                      <option value="other" ${
+                        data.goal_type === "other" ? "selected" : ""
+                      }>Other</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="edit-target-amount">Target Amount ($):</label>
+                    <input type="number" id="edit-target-amount" step="0.01" value="${
+                      data.target_amount
+                    }" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="edit-current-amount">Current Amount ($):</label>
+                    <input type="number" id="edit-current-amount" step="0.01" value="${
+                      data.current_amount
+                    }" />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="edit-target-date">Target Date (optional):</label>
+                  <input type="date" id="edit-target-date" value="${
+                    data.target_date || ""
+                  }" />
+                </div>
+              `;
+            }
+
+            document.getElementById("editFormContent").innerHTML = formContent;
+            document.getElementById("editModalTitle").textContent = `Edit ${
+              currentRecordType.charAt(0).toUpperCase() +
+              currentRecordType.slice(1)
+            }`;
+            closeModal("detailModal");
+            document.getElementById("editModal").style.display = "block";
+          })
+          .catch((error) => {
+            alert("Error loading record for edit: " + error.message);
+          });
+      }
+
+      function saveRecord(event) {
+        event.preventDefault();
+
+        let formData = {};
+
+        if (currentRecordType === "income") {
+          formData = {
+            client: document.getElementById("edit-client").value,
+            service_type: document.getElementById("edit-service-type").value,
+            amount: parseFloat(document.getElementById("edit-amount").value),
+            date: document.getElementById("edit-date").value,
+            expects_1099:
+              document.getElementById("edit-expects-1099").value === "true",
+            notes: document.getElementById("edit-notes").value,
+          };
+        } else if (currentRecordType === "expenses") {
+          formData = {
+            category: document.getElementById("edit-category").value,
+            description: document.getElementById("edit-description").value,
+            amount: parseFloat(document.getElementById("edit-amount").value),
+            date: document.getElementById("edit-date").value,
+            business_purpose: document.getElementById("edit-business-purpose")
+              .value,
+          };
+        } else if (currentRecordType === "mileage") {
+          formData = {
+            start_location: document.getElementById("edit-start-location")
+              .value,
+            destination: document.getElementById("edit-destination").value,
+            miles: parseFloat(document.getElementById("edit-miles").value),
+            date: document.getElementById("edit-date").value,
+            business_purpose: document.getElementById("edit-business-purpose")
+              .value,
+          };
+        } else if (currentRecordType === "utilities") {
+          formData = {
+            utility_type: document.getElementById("edit-utility-type").value,
+            monthly_amount: parseFloat(
+              document.getElementById("edit-monthly-amount").value
+            ),
+            business_percentage: parseFloat(
+              document.getElementById("edit-business-percentage").value
+            ),
+          };
+        } else if (currentRecordType === "tax-payments") {
+          formData = {
+            quarter: document.getElementById("edit-quarter").value,
+            amount: parseFloat(
+              document.getElementById("edit-payment-amount").value
+            ),
+            payment_date: document.getElementById("edit-payment-date").value,
+            payment_method: document.getElementById("edit-payment-method")
+              .value,
+            confirmation_number: document.getElementById(
+              "edit-confirmation-number"
+            ).value,
+          };
+        } else if (currentRecordType === "savings-goals") {
+          formData = {
+            goal_name: document.getElementById("edit-goal-name").value,
+            target_amount: parseFloat(
+              document.getElementById("edit-target-amount").value
+            ),
+            current_amount:
+              parseFloat(
+                document.getElementById("edit-current-amount").value
+              ) || 0,
+            target_date: document.getElementById("edit-target-date").value,
+            goal_type: document.getElementById("edit-goal-type").value,
+          };
         }
 
-        // Update stats
-        const statsHTML = `
-                <div class="stat-card">
-                    <h4>Total Income</h4>
-                    <div class="amount">${formatCurrency(
-                      data.total_income
-                    )}</div>
-                </div>
-                <div class="stat-card">
-                    <h4>Total Expenses</h4>
-                    <div class="amount">${formatCurrency(
-                      data.total_expenses
-                    )}</div>
-                </div>
-                <div class="stat-card">
-                    <h4>Net Profit</h4>
-                    <div class="amount">${formatCurrency(data.net_profit)}</div>
-                </div>
-                <div class="stat-card">
-                    <h4>Estimated Taxes</h4>
-                    <div class="amount">${formatCurrency(data.total_tax)}</div>
-                </div>
+        apiCall(`${currentRecordType}/${currentRecord}`, "PUT", formData)
+          .then((result) => {
+            if (result.success) {
+              closeModal("editModal");
+              showNotification("Record updated successfully!", "success");
+              refreshAllData();
+              currentRecord = null;
+              currentRecordType = null;
+            } else {
+              alert(
+                "Error saving record: " + (result.error || "Unknown error")
+              );
+            }
+          })
+          .catch((error) => {
+            alert("Error saving record: " + error.message);
+          });
+      }
+
+      function confirmDelete() {
+        if (!currentRecord || !currentRecordType) return;
+
+        apiCall(`${currentRecordType}/${currentRecord}`)
+          .then((data) => {
+            if (data.error) {
+              alert("Error loading record for deletion: " + data.error);
+              return;
+            }
+
+            let recordSummary = "";
+            if (currentRecordType === "income") {
+              recordSummary = `
+                <h5 style="color: #667eea; margin-bottom: 10px;">💰 Income Record</h5>
+                <p><strong>Client:</strong> ${data.client}</p>
+                <p><strong>Service:</strong> ${data.service_type}</p>
+                <p><strong>Amount:</strong> ${formatCurrency(data.amount)}</p>
+                <p><strong>Date:</strong> ${formatDate(data.date)}</p>
+                ${
+                  data.notes
+                    ? `<p><strong>Notes:</strong> ${data.notes}</p>`
+                    : ""
+                }
+              `;
+            } else if (currentRecordType === "expenses") {
+              recordSummary = `
+                <h5 style="color: #667eea; margin-bottom: 10px;">🧾 Expense Record</h5>
+                <p><strong>Category:</strong> ${data.category}</p>
+                <p><strong>Description:</strong> ${data.description}</p>
+                <p><strong>Amount:</strong> ${formatCurrency(data.amount)}</p>
+                <p><strong>Date:</strong> ${formatDate(data.date)}</p>
+                <p><strong>Business Purpose:</strong> ${
+                  data.business_purpose
+                }</p>
+              `;
+            } else if (currentRecordType === "mileage") {
+              recordSummary = `
+                <h5 style="color: #667eea; margin-bottom: 10px;">🚗 Mileage Record</h5>
+                <p><strong>Trip:</strong> ${data.start_location} → ${
+                data.destination
+              }</p>
+                <p><strong>Miles:</strong> ${data.miles}</p>
+                <p><strong>Date:</strong> ${formatDate(data.date)}</p>
+                <p><strong>Purpose:</strong> ${data.business_purpose}</p>
+                <p><strong>Deduction:</strong> ${formatCurrency(
+                  data.deduction_amount
+                )}</p>
+              `;
+            } else if (currentRecordType === "utilities") {
+              recordSummary = `
+                <h5 style="color: #667eea; margin-bottom: 10px;">⚡ Utility Record</h5>
+                <p><strong>Utility Type:</strong> ${data.utility_type}</p>
+                <p><strong>Monthly Amount:</strong> ${formatCurrency(
+                  data.monthly_amount
+                )}</p>
+                <p><strong>Business Percentage:</strong> ${
+                  data.business_percentage
+                }%</p>
+                <p><strong>Annual Deduction:</strong> ${formatCurrency(
+                  data.annual_deduction
+                )}</p>
+              `;
+            } else if (currentRecordType === "tax-payments") {
+              recordSummary = `
+                <h5 style="color: #667eea; margin-bottom: 10px;">💳 Tax Payment Record</h5>
+                <p><strong>Quarter:</strong> ${data.quarter}</p>
+                <p><strong>Amount:</strong> ${formatCurrency(data.amount)}</p>
+                <p><strong>Payment Date:</strong> ${formatDate(
+                  data.payment_date
+                )}</p>
+                <p><strong>Method:</strong> ${data.payment_method || "N/A"}</p>
+                ${
+                  data.confirmation_number
+                    ? `<p><strong>Confirmation:</strong> ${data.confirmation_number}</p>`
+                    : ""
+                }
+              `;
+            } else if (currentRecordType === "savings-goals") {
+              const progress = (data.current_amount / data.target_amount) * 100;
+              const remaining = data.target_amount - data.current_amount;
+              recordSummary = `
+                <h5 style="color: #667eea; margin-bottom: 10px;">🎯 Savings Goal</h5>
+                <p><strong>Goal Name:</strong> ${data.goal_name}</p>
+                <p><strong>Type:</strong> ${data.goal_type
+                  .replace("-", " ")
+                  .replace(/\b\w/g, (l) => l.toUpperCase())}</p>
+                <p><strong>Target:</strong> ${formatCurrency(
+                  data.target_amount
+                )}</p>
+                <p><strong>Current:</strong> ${formatCurrency(
+                  data.current_amount
+                )}</p>
+                <p><strong>Remaining:</strong> ${formatCurrency(remaining)}</p>
+                <p><strong>Progress:</strong> ${progress.toFixed(1)}%</p>
+                ${
+                  data.target_date
+                    ? `<p><strong>Target Date:</strong> ${formatDate(
+                        data.target_date
+                      )}</p>`
+                    : ""
+                }
+              `;
+            }
+
+            document.getElementById("deleteRecordDetails").innerHTML =
+              recordSummary;
+            closeModal("detailModal");
+            document.getElementById("confirmDeleteModal").style.display =
+              "block";
+          })
+          .catch((error) => {
+            alert("Error loading record for deletion: " + error.message);
+          });
+      }
+
+      function executeDelete() {
+        if (!currentRecord || !currentRecordType) return;
+
+        apiCall(`${currentRecordType}/${currentRecord}`, "DELETE")
+          .then((result) => {
+            if (result.success) {
+              closeModal("confirmDeleteModal");
+              showNotification("Record deleted successfully!", "success");
+              refreshAllData();
+              currentRecord = null;
+              currentRecordType = null;
+            } else {
+              alert(
+                "Error deleting record: " + (result.error || "Unknown error")
+              );
+            }
+          })
+          .catch((error) => {
+            alert("Error deleting record: " + error.message);
+          });
+      }
+
+      function closeModal(modalId) {
+        document.getElementById(modalId).style.display = "none";
+        if (modalId === "confirmDeleteModal" || modalId === "editModal") {
+          currentRecord = null;
+          currentRecordType = null;
+        }
+      }
+
+      // Utility function to refresh all data
+      function refreshAllData() {
+        loadIncomeData();
+        loadExpenseData();
+        loadMileageData();
+        loadUtilityData();
+        loadTaxPayments();
+        loadGoalsData();
+        if (currentTab === "overview") loadOverviewData();
+        console.log("All data refreshed after edit/delete");
+      }
+
+      // Notification system
+      function showNotification(message, type = "success") {
+        const notification = document.createElement("div");
+        notification.className = `alert alert-${type}`;
+        notification.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          z-index: 9999;
+          min-width: 300px;
+          animation: slideIn 0.3s ease;
+        `;
+        notification.innerHTML = `
+          <strong>${type === "success" ? "✅" : "❌"} ${message}</strong>
+        `;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+          notification.style.animation = "slideOut 0.3s ease";
+          setTimeout(() => {
+            if (notification.parentNode) {
+              notification.parentNode.removeChild(notification);
+            }
+          }, 300);
+        }, 3000);
+      }
+
+      // Load overview data
+      async function loadOverviewData() {
+        try {
+          const data = await apiCall("overview");
+
+          if (data.error) {
+            document.getElementById("overview-content").innerHTML =
+              '<div class="alert alert-danger">Error loading overview data: ' +
+              data.error +
+              "</div>";
+            return;
+          }
+
+          const statsHTML = `
+            <div class="stat-card">
+              <h4>Total Income</h4>
+              <div class="amount">${formatCurrency(data.total_income)}</div>
+            </div>
+            <div class="stat-card">
+              <h4>Total Expenses</h4>
+              <div class="amount">${formatCurrency(data.total_expenses)}</div>
+            </div>
+            <div class="stat-card">
+              <h4>Net Profit</h4>
+              <div class="amount">${formatCurrency(data.net_profit)}</div>
+            </div>
+            <div class="stat-card">
+              <h4>Estimated Taxes</h4>
+              <div class="amount">${formatCurrency(data.total_tax)}</div>
+            </div>
+          `;
+          document.getElementById("stats-grid").innerHTML = statsHTML;
+
+          let remindersHTML = "";
+          data.tax_reminders.forEach((reminder) => {
+            let statusClass =
+              reminder.status === "overdue"
+                ? "overdue"
+                : reminder.status === "due_soon"
+                ? "due-soon"
+                : "future";
+            let statusText =
+              reminder.status === "overdue"
+                ? `Overdue by ${Math.abs(reminder.days_until_due)} days`
+                : reminder.status === "due_soon"
+                ? `Due in ${reminder.days_until_due} days`
+                : `Due in ${reminder.days_until_due} days`;
+
+            remindersHTML += `
+              <div class="tax-reminder ${statusClass}">
+                <strong>${reminder.quarter} Payment</strong> - Due ${formatDate(
+              reminder.due_date
+            )}
+                <br><small>${statusText}</small>
+              </div>
             `;
-        document.getElementById("stats-grid").innerHTML = statsHTML;
+          });
+          document.getElementById("tax-reminders").innerHTML =
+            remindersHTML || "<p>No upcoming tax reminders</p>";
 
-        // Update tax reminders
-        let remindersHTML = "";
-        data.tax_reminders.forEach((reminder) => {
-          let statusClass =
-            reminder.status === "overdue"
-              ? "overdue"
-              : reminder.status === "due_soon"
-              ? "due-soon"
-              : "future";
+          let transactionsHTML =
+            '<table class="table"><thead><tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th></tr></thead><tbody>';
+          data.recent_transactions.forEach((transaction) => {
+            const description =
+              transaction.type === "income"
+                ? transaction.client
+                : transaction.description;
+            transactionsHTML += `
+              <tr>
+                <td>${formatDate(transaction.date)}</td>
+                <td>${description}</td>
+                <td>${transaction.type}</td>
+                <td>${formatCurrency(transaction.amount)}</td>
+              </tr>
+            `;
+          });
+          transactionsHTML += "</tbody></table>";
+          document.getElementById("recent-transactions").innerHTML =
+            transactionsHTML;
 
-          let statusText =
-            reminder.status === "overdue"
-              ? `Overdue by ${Math.abs(reminder.days_until_due)} days`
-              : reminder.status === "due_soon"
-              ? `Due in ${reminder.days_until_due} days`
-              : `Due in ${reminder.days_until_due} days`;
-
-          remindersHTML += `
-                    <div class="tax-reminder ${statusClass}">
-                        <strong>${
-                          reminder.quarter
-                        } Payment</strong> - Due ${formatDate(
-            reminder.due_date
-          )}
-                        <br><small>${statusText}</small>
-                    </div>
-                `;
-        });
-        document.getElementById("tax-reminders").innerHTML =
-          remindersHTML || "<p>No upcoming tax reminders</p>";
-
-        // Update recent transactions
-        let transactionsHTML =
-          '<table class="table"><thead><tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th></tr></thead><tbody>';
-        data.recent_transactions.forEach((transaction) => {
-          const description =
-            transaction.type === "income"
-              ? transaction.client
-              : transaction.description;
-          const typeClass =
-            transaction.type === "income" ? "success" : "secondary";
-          transactionsHTML += `
-                    <tr>
-                        <td>${formatDate(transaction.date)}</td>
-                        <td>${description}</td>
-                        <td><span class="badge badge-${typeClass}">${
-            transaction.type
-          }</span></td>
-                        <td>${formatCurrency(transaction.amount)}</td>
-                    </tr>
-                `;
-        });
-        transactionsHTML += "</tbody></table>";
-        document.getElementById("recent-transactions").innerHTML =
-          transactionsHTML;
-
-        // Show content
-        document.getElementById("overview-loading").style.display = "none";
-        document.getElementById("overview-content").style.display = "block";
+          document.getElementById("overview-loading").style.display = "none";
+          document.getElementById("overview-content").style.display = "block";
+        } catch (error) {
+          document.getElementById("overview-content").innerHTML =
+            '<div class="alert alert-danger">Error loading overview data: ' +
+            error.message +
+            "</div>";
+        }
       }
 
       // Income functions
       async function addIncome(event) {
         event.preventDefault();
+
+        // Validate date before submitting
+        const dateInput = document.getElementById("income-date");
+        if (!validateDate(dateInput)) {
+          return; // Stop submission if date is invalid
+        }
 
         const formData = {
           client: document.getElementById("client").value,
@@ -1183,40 +2285,63 @@
         const result = await apiCall("income", "POST", formData);
 
         if (result.success) {
-          document.getElementById("income-form").reset();
-          document.getElementById("income-date").value = new Date()
-            .toISOString()
-            .split("T")[0];
+          resetFormCompletely("income-form");
+          showNotification("Income added successfully!", "success");
           loadIncomeData();
           if (currentTab === "overview") loadOverviewData();
+        } else {
+          alert("Error adding income: " + (result.error || "Unknown error"));
         }
       }
 
       async function loadIncomeData() {
-        const data = await apiCall("income");
+        try {
+          const data = await apiCall("income");
 
-        let html =
-          '<table class="table"><thead><tr><th>Date</th><th>Client</th><th>Service</th><th>Amount</th><th>1099</th></tr></thead><tbody>';
+          if (data.error) {
+            document.getElementById("income-history").innerHTML =
+              '<div class="alert alert-danger">Error loading income data: ' +
+              data.error +
+              "</div>";
+            return;
+          }
 
-        data.forEach((income) => {
-          html += `
-                    <tr>
-                        <td>${formatDate(income.date)}</td>
-                        <td>${income.client}</td>
-                        <td>${income.service_type}</td>
-                        <td>${formatCurrency(income.amount)}</td>
-                        <td>${income.expects_1099 ? "Yes" : "No"}</td>
-                    </tr>
-                `;
-        });
+          let html =
+            '<table class="table"><thead><tr><th>Date</th><th>Client</th><th>Service</th><th>Amount</th><th>1099</th></tr></thead><tbody>';
 
-        html += "</tbody></table>";
-        document.getElementById("income-history").innerHTML = html;
+          data.forEach((income) => {
+            html += `
+              <tr onclick="showRecordDetails('income', ${
+                income.id
+              })" style="cursor: pointer;">
+                <td>${formatDate(income.date)}</td>
+                <td>${income.client}</td>
+                <td>${income.service_type}</td>
+                <td>${formatCurrency(income.amount)}</td>
+                <td>${income.expects_1099 ? "Yes" : "No"}</td>
+              </tr>
+            `;
+          });
+
+          html += "</tbody></table>";
+          document.getElementById("income-history").innerHTML = html;
+        } catch (error) {
+          document.getElementById("income-history").innerHTML =
+            '<div class="alert alert-danger">Error loading income data: ' +
+            error.message +
+            "</div>";
+        }
       }
 
       // Expense functions
       async function addExpense(event) {
         event.preventDefault();
+
+        // Validate date before submitting
+        const dateInput = document.getElementById("expense-date");
+        if (!validateDate(dateInput)) {
+          return; // Stop submission if date is invalid
+        }
 
         const formData = {
           category: document.getElementById("expense-category").value,
@@ -1229,39 +2354,62 @@
         const result = await apiCall("expenses", "POST", formData);
 
         if (result.success) {
-          document.getElementById("expense-form").reset();
-          document.getElementById("expense-date").value = new Date()
-            .toISOString()
-            .split("T")[0];
+          resetFormCompletely("expense-form");
+          showNotification("Expense added successfully!", "success");
           loadExpenseData();
           if (currentTab === "overview") loadOverviewData();
+        } else {
+          alert("Error adding expense: " + (result.error || "Unknown error"));
         }
       }
 
       async function loadExpenseData() {
-        const data = await apiCall("expenses");
+        try {
+          const data = await apiCall("expenses");
 
-        let html =
-          '<table class="table"><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead><tbody>';
+          if (data.error) {
+            document.getElementById("expense-history").innerHTML =
+              '<div class="alert alert-danger">Error loading expense data: ' +
+              data.error +
+              "</div>";
+            return;
+          }
 
-        data.forEach((expense) => {
-          html += `
-                    <tr>
-                        <td>${formatDate(expense.date)}</td>
-                        <td>${expense.category}</td>
-                        <td>${expense.description}</td>
-                        <td>${formatCurrency(expense.amount)}</td>
-                    </tr>
-                `;
-        });
+          let html =
+            '<table class="table"><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Actions</th></tr></thead><tbody>';
 
-        html += "</tbody></table>";
-        document.getElementById("expense-history").innerHTML = html;
+          data.forEach((expense) => {
+            html += `
+              <tr onclick="showRecordDetails('expenses', ${
+                expense.id
+              })" style="cursor: pointer;">
+                <td>${formatDate(expense.date)}</td>
+                <td>${expense.category}</td>
+                <td>${expense.description}</td>
+                <td>${formatCurrency(expense.amount)}</td>
+              </tr>
+            `;
+          });
+
+          html += "</tbody></table>";
+          document.getElementById("expense-history").innerHTML = html;
+        } catch (error) {
+          document.getElementById("expense-history").innerHTML =
+            '<div class="alert alert-danger">Error loading expense data: ' +
+            error.message +
+            "</div>";
+        }
       }
 
       // Mileage functions
       async function addMileage(event) {
         event.preventDefault();
+
+        // Validate date before submitting
+        const dateInput = document.getElementById("mileage-date");
+        if (!validateDate(dateInput)) {
+          return; // Stop submission if date is invalid
+        }
 
         const formData = {
           start_location: document.getElementById("start-location").value,
@@ -1274,70 +2422,81 @@
         const result = await apiCall("mileage", "POST", formData);
 
         if (result.success) {
-          document.getElementById("mileage-form").reset();
-          document.getElementById("mileage-date").value = new Date()
-            .toISOString()
-            .split("T")[0];
+          resetFormCompletely("mileage-form");
+          showNotification("Mileage added successfully!", "success");
           loadMileageData();
           if (currentTab === "overview") loadOverviewData();
+        } else {
+          alert("Error adding mileage: " + (result.error || "Unknown error"));
         }
       }
 
       async function loadMileageData() {
-        const data = await apiCall("mileage");
+        try {
+          const data = await apiCall("mileage");
 
-        let totalMiles = 0;
-        let totalDeduction = 0;
-        let html =
-          '<table class="table"><thead><tr><th>Date</th><th>Trip</th><th>Miles</th><th>Deduction</th></tr></thead><tbody>';
+          if (data.error) {
+            document.getElementById("mileage-summary").innerHTML =
+              '<div class="alert alert-danger">Error loading mileage data: ' +
+              data.error +
+              "</div>";
+            return;
+          }
 
-        data.forEach((mileage) => {
-          totalMiles += parseFloat(mileage.miles);
-          totalDeduction += parseFloat(mileage.deduction_amount);
-          html += `
-                    <tr>
-                        <td>${formatDate(mileage.date)}</td>
-                        <td>${mileage.start_location} → ${
-            mileage.destination
-          }</td>
-                        <td>${mileage.miles}</td>
-                        <td>${formatCurrency(mileage.deduction_amount)}</td>
-                    </tr>
-                `;
-        });
+          let totalMiles = 0;
+          let totalDeduction = 0;
+          let html =
+            '<table class="table"><thead><tr><th>Date</th><th>Trip</th><th>Miles</th><th>Deduction</th><th>Actions</th></tr></thead><tbody>';
 
-        html += "</tbody></table>";
-
-        const summaryHTML = `
-                <div class="stats-grid" style="grid-template-columns: 1fr 1fr; margin-top: 20px;">
-                    <div class="stat-card">
-                        <h4>Total Miles</h4>
-                        <div class="amount">${totalMiles.toFixed(1)}</div>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Total Deduction</h4>
-                        <div class="amount">${formatCurrency(
-                          totalDeduction
-                        )}</div>
-                    </div>
-                </div>
-                ${html}
+          data.forEach((mileage) => {
+            totalMiles += parseFloat(mileage.miles);
+            totalDeduction += parseFloat(mileage.deduction_amount);
+            html += `
+              <tr onclick="showRecordDetails('mileage', ${
+                mileage.id
+              })" style="cursor: pointer;">
+                <td>${formatDate(mileage.date)}</td>
+                <td>${mileage.start_location} → ${mileage.destination}</td>
+                <td>${mileage.miles}</td>
+                <td>${formatCurrency(mileage.deduction_amount)}</td>
+              </tr>
             `;
+          });
 
-        document.getElementById("mileage-summary").innerHTML = summaryHTML;
+          html += "</tbody></table>";
+
+          const summaryHTML = `
+            <div class="stats-grid" style="grid-template-columns: 1fr 1fr; margin-top: 20px;">
+              <div class="stat-card">
+                <h4>Total Miles</h4>
+                <div class="amount">${totalMiles.toFixed(1)}</div>
+              </div>
+              <div class="stat-card">
+                <h4>Total Deduction</h4>
+                <div class="amount">${formatCurrency(totalDeduction)}</div>
+              </div>
+            </div>
+            ${html}
+          `;
+
+          document.getElementById("mileage-summary").innerHTML = summaryHTML;
+        } catch (error) {
+          document.getElementById("mileage-summary").innerHTML =
+            '<div class="alert alert-danger">Error loading mileage data: ' +
+            error.message +
+            "</div>";
+        }
       }
 
       // Home Office functions
       function selectHomeOfficeMethod(method) {
         selectedHomeOfficeMethod = method;
 
-        // Update visual selection
         document.querySelectorAll(".method-card").forEach((card) => {
           card.classList.remove("selected");
         });
         document.getElementById(`${method}-method`).classList.add("selected");
 
-        // Show appropriate form fields
         document.getElementById("home-office-form").style.display = "block";
         document.getElementById("simplified-fields").style.display =
           method === "simplified" ? "block" : "none";
@@ -1372,38 +2531,54 @@
             card.classList.remove("selected");
           });
           selectedHomeOfficeMethod = null;
+          showNotification("Home office deduction updated!", "success");
           loadHomeOfficeData();
           if (currentTab === "overview") loadOverviewData();
+        } else {
+          alert(
+            "Error setting home office: " + (result.error || "Unknown error")
+          );
         }
       }
 
       async function loadHomeOfficeData() {
-        const data = await apiCall("home-office");
+        try {
+          const data = await apiCall("home-office");
 
-        if (data.method) {
-          let html = `<div class="alert alert-success">
-                    <strong>Current Setup:</strong> ${
-                      data.method === "simplified"
-                        ? "Simplified"
-                        : "Actual Expense"
-                    } Method<br>`;
-
-          if (data.method === "simplified") {
-            html += `Office Size: ${data.square_feet} sq ft<br>
-                            Annual Deduction: ${formatCurrency(
-                              data.annual_deduction
-                            )}`;
-          } else {
-            html += `Office: ${data.square_feet} sq ft of ${data.home_square_feet} sq ft home<br>
-                            Business Percentage: ${data.business_percentage}%<br>
-                            <small>Use this percentage for utility calculations</small>`;
+          if (data.error || !data.method) {
+            document.getElementById("home-office-summary").innerHTML =
+              "<p>No home office deduction configured. Select a method above to get started.</p>";
+            return;
           }
 
-          html += "</div>";
-          document.getElementById("home-office-summary").innerHTML = html;
-        } else {
+          let summaryHTML = "";
+          if (data.method === "simplified") {
+            summaryHTML = `
+              <div class="stat-card" style="margin-top: 20px;">
+                <h4>Simplified Home Office Deduction</h4>
+                <div class="amount">${formatCurrency(
+                  data.annual_deduction
+                )}</div>
+                <small>${data.square_feet} sq ft × $5 per sq ft</small>
+              </div>
+            `;
+          } else {
+            summaryHTML = `
+              <div class="stat-card" style="margin-top: 20px;">
+                <h4>Actual Home Office Percentage</h4>
+                <div class="amount">${data.business_percentage}%</div>
+                <small>${data.square_feet} sq ft of ${data.home_square_feet} sq ft total</small>
+              </div>
+            `;
+          }
+
           document.getElementById("home-office-summary").innerHTML =
-            "<p>No home office deduction configured. Select a method above to get started.</p>";
+            summaryHTML;
+        } catch (error) {
+          document.getElementById("home-office-summary").innerHTML =
+            '<div class="alert alert-danger">Error loading home office data: ' +
+            error.message +
+            "</div>";
         }
       }
 
@@ -1425,50 +2600,68 @@
 
         if (result.success) {
           document.getElementById("utility-form").reset();
+          showNotification("Utility expense added successfully!", "success");
           loadUtilityData();
           if (currentTab === "overview") loadOverviewData();
+        } else {
+          alert("Error adding utility: " + (result.error || "Unknown error"));
         }
       }
 
       async function loadUtilityData() {
-        const data = await apiCall("utilities");
+        try {
+          const data = await apiCall("utilities");
 
-        if (data.length === 0) {
-          document.getElementById("utility-summary").innerHTML =
-            "<p>No utility expenses recorded yet.</p>";
-          return;
-        }
+          if (data.error) {
+            document.getElementById("utility-summary").innerHTML =
+              '<div class="alert alert-danger">Error loading utility data: ' +
+              data.error +
+              "</div>";
+            return;
+          }
 
-        let totalAnnualDeduction = 0;
-        let html =
-          '<table class="table"><thead><tr><th>Utility</th><th>Monthly Amount</th><th>Business %</th><th>Monthly Deduction</th><th>Annual Deduction</th></tr></thead><tbody>';
+          if (data.length === 0) {
+            document.getElementById("utility-summary").innerHTML =
+              "<p>No utility expenses recorded yet.</p>";
+            return;
+          }
 
-        data.forEach((utility) => {
-          totalAnnualDeduction += parseFloat(utility.annual_deduction);
-          html += `
-                    <tr>
-                        <td>${utility.utility_type}</td>
-                        <td>${formatCurrency(utility.monthly_amount)}</td>
-                        <td>${utility.business_percentage}%</td>
-                        <td>${formatCurrency(utility.monthly_deduction)}</td>
-                        <td>${formatCurrency(utility.annual_deduction)}</td>
-                    </tr>
-                `;
-        });
+          let totalAnnualDeduction = 0;
+          let html =
+            '<table class="table"><thead><tr><th>Utility</th><th>Monthly Amount</th><th>Business %</th><th>Monthly Deduction</th><th>Annual Deduction</th><th>Actions</th></tr></thead><tbody>';
 
-        html += "</tbody></table>";
-
-        const summaryHTML = `
-                <div class="stat-card" style="margin-bottom: 20px;">
-                    <h4>Total Annual Utility Deductions</h4>
-                    <div class="amount">${formatCurrency(
-                      totalAnnualDeduction
-                    )}</div>
-                </div>
-                ${html}
+          data.forEach((utility) => {
+            totalAnnualDeduction += parseFloat(utility.annual_deduction);
+            html += `
+              <tr onclick="showRecordDetails('utilities', ${
+                utility.id
+              })" style="cursor: pointer;">
+                <td>${utility.utility_type}</td>
+                <td>${formatCurrency(utility.monthly_amount)}</td>
+                <td>${utility.business_percentage}%</td>
+                <td>${formatCurrency(utility.monthly_deduction)}</td>
+                <td>${formatCurrency(utility.annual_deduction)}</td>
+              </tr>
             `;
+          });
 
-        document.getElementById("utility-summary").innerHTML = summaryHTML;
+          html += "</tbody></table>";
+
+          const summaryHTML = `
+            <div class="stat-card" style="margin-bottom: 20px;">
+              <h4>Total Annual Utility Deductions</h4>
+              <div class="amount">${formatCurrency(totalAnnualDeduction)}</div>
+            </div>
+            ${html}
+          `;
+
+          document.getElementById("utility-summary").innerHTML = summaryHTML;
+        } catch (error) {
+          document.getElementById("utility-summary").innerHTML =
+            '<div class="alert alert-danger">Error loading utility data: ' +
+            error.message +
+            "</div>";
+        }
       }
 
       // Tax functions
@@ -1488,90 +2681,138 @@
         const result = await apiCall("tax-settings", "POST", formData);
 
         if (result.success) {
+          showNotification("Tax settings saved successfully!", "success");
           loadTaxCalculations();
           if (currentTab === "overview") loadOverviewData();
+        } else {
+          alert(
+            "Error saving tax settings: " + (result.error || "Unknown error")
+          );
         }
       }
 
       async function loadTaxSettings() {
-        const data = await apiCall("tax-settings");
+        try {
+          const data = await apiCall("tax-settings");
 
-        if (data.business_name) {
-          document.getElementById("business-name").value = data.business_name;
-          document.getElementById("tax-year").value = data.tax_year;
-          document.getElementById("filing-status").value = data.filing_status;
-          document.getElementById("other-income").value =
-            data.other_income || 0;
-          document.getElementById("prior-year-tax").value =
-            data.prior_year_tax || 0;
+          if (data.error) {
+            console.error("Error loading tax settings:", data.error);
+            return;
+          }
 
-          loadTaxCalculations();
+          if (data.business_name) {
+            document.getElementById("business-name").value = data.business_name;
+            document.getElementById("tax-year").value = data.tax_year;
+            document.getElementById("filing-status").value = data.filing_status;
+            document.getElementById("other-income").value =
+              data.other_income || 0;
+            document.getElementById("prior-year-tax").value =
+              data.prior_year_tax || 0;
+
+            loadTaxCalculations();
+          }
+        } catch (error) {
+          console.error("Error loading tax settings:", error);
         }
       }
 
       async function loadTaxCalculations() {
-        const overview = await apiCall("overview");
-        const settings = await apiCall("tax-settings");
+        try {
+          const overview = await apiCall("overview");
+          const settings = await apiCall("tax-settings");
 
-        if (!settings.business_name) {
+          // Check for API errors first
+          if (overview.error) {
+            document.getElementById("tax-calculations").innerHTML =
+              '<div class="alert alert-danger">Error loading financial data: ' +
+              overview.error +
+              "</div>";
+            return;
+          }
+
+          if (settings.error) {
+            document.getElementById("tax-calculations").innerHTML =
+              '<div class="alert alert-danger">Error loading tax settings: ' +
+              settings.error +
+              "</div>";
+            return;
+          }
+
+          if (!settings.business_name) {
+            document.getElementById("tax-calculations").innerHTML =
+              '<div class="alert alert-warning">Please configure tax settings first</div>';
+            return;
+          }
+
+          // Validate that we have the required data
+          if (
+            overview.net_profit === undefined ||
+            overview.self_employment_tax === undefined
+          ) {
+            document.getElementById("tax-calculations").innerHTML =
+              '<div class="alert alert-warning">Insufficient financial data for tax calculations. Please add some income and expenses first.</div>';
+            return;
+          }
+
+          const netProfit = overview.net_profit;
+          const seTax = overview.self_employment_tax;
+          const incomeTax = overview.income_tax;
+          const totalTax = overview.total_tax;
+
+          const safeHarbor = settings.prior_year_tax || 0;
+          const currentYear90 = totalTax * 0.9;
+          const requiredAnnual = Math.max(safeHarbor, currentYear90);
+          const quarterlyPayment = requiredAnnual / 4;
+
+          const html = `
+            <div class="stats-grid">
+              <div class="stat-card">
+                <h4>Net Business Profit</h4>
+                <div class="amount">${formatCurrency(netProfit)}</div>
+              </div>
+              <div class="stat-card">
+                <h4>Self-Employment Tax</h4>
+                <div class="amount">${formatCurrency(seTax)}</div>
+                <small>15.3% on 92.35% of profit</small>
+              </div>
+              <div class="stat-card">
+                <h4>Income Tax (Est.)</h4>
+                <div class="amount">${formatCurrency(incomeTax)}</div>
+                <small>Based on 22% bracket</small>
+              </div>
+              <div class="stat-card">
+                <h4>Total Tax Liability</h4>
+                <div class="amount">${formatCurrency(totalTax)}</div>
+              </div>
+            </div>
+
+            <div class="card" style="margin-top: 20px;">
+              <h4>Quarterly Payment Calculation</h4>
+              <p><strong>Safe Harbor (100% prior year):</strong> ${formatCurrency(
+                safeHarbor
+              )}</p>
+              <p><strong>Current Year (90%):</strong> ${formatCurrency(
+                currentYear90
+              )}</p>
+              <p><strong>Required Annual Payment:</strong> ${formatCurrency(
+                requiredAnnual
+              )}</p>
+              <div class="alert alert-success">
+                <strong>Recommended Quarterly Payment: ${formatCurrency(
+                  quarterlyPayment
+                )}</strong>
+              </div>
+            </div>
+          `;
+
+          document.getElementById("tax-calculations").innerHTML = html;
+        } catch (error) {
+          console.error("Tax calculations error:", error);
           document.getElementById("tax-calculations").innerHTML =
-            '<div class="alert alert-warning">Please configure tax settings first</div>';
-          return;
+            '<div class="alert alert-danger">Error loading tax calculations: ' +
+            error.message +
+            "</div>";
         }
-
-        const netProfit = overview.net_profit;
-        const seTax = overview.self_employment_tax;
-        const incomeTax = overview.income_tax;
-        const totalTax = overview.total_tax;
-
-        // Calculate quarterly payments
-        const safeHarbor = settings.prior_year_tax || 0;
-        const currentYear90 = totalTax * 0.9;
-        const requiredAnnual = Math.max(safeHarbor, currentYear90);
-        const quarterlyPayment = requiredAnnual / 4;
-
-        const html = `
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h4>Net Business Profit</h4>
-                        <div class="amount">${formatCurrency(netProfit)}</div>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Self-Employment Tax</h4>
-                        <div class="amount">${formatCurrency(seTax)}</div>
-                        <small>15.3% on 92.35% of profit</small>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Income Tax (Est.)</h4>
-                        <div class="amount">${formatCurrency(incomeTax)}</div>
-                        <small>Based on 22% bracket</small>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Total Tax Liability</h4>
-                        <div class="amount">${formatCurrency(totalTax)}</div>
-                    </div>
-                </div>
-                
-                <div class="card" style="margin-top: 20px;">
-                    <h4>Quarterly Payment Calculation</h4>
-                    <p><strong>Safe Harbor (100% prior year):</strong> ${formatCurrency(
-                      safeHarbor
-                    )}</p>
-                    <p><strong>Current Year (90%):</strong> ${formatCurrency(
-                      currentYear90
-                    )}</p>
-                    <p><strong>Required Annual Payment:</strong> ${formatCurrency(
-                      requiredAnnual
-                    )}</p>
-                    <div class="alert alert-success">
-                        <strong>Recommended Quarterly Payment: ${formatCurrency(
-                          quarterlyPayment
-                        )}</strong>
-                    </div>
-                </div>
-            `;
-
-        document.getElementById("tax-calculations").innerHTML = html;
       }
 
       async function recordTaxPayment(event) {
@@ -1593,48 +2834,70 @@
           document.getElementById("payment-date").value = new Date()
             .toISOString()
             .split("T")[0];
+          showNotification("Tax payment recorded successfully!", "success");
           loadTaxPayments();
           if (currentTab === "overview") loadOverviewData();
+        } else {
+          alert(
+            "Error recording tax payment: " + (result.error || "Unknown error")
+          );
         }
       }
 
       async function loadTaxPayments() {
-        const data = await apiCall("tax-payments");
+        try {
+          const data = await apiCall("tax-payments");
 
-        if (data.length === 0) {
-          document.getElementById("payment-history").innerHTML =
-            "<p>No tax payments recorded yet.</p>";
-          return;
-        }
+          if (data.error) {
+            document.getElementById("payment-history").innerHTML =
+              '<div class="alert alert-danger">Error loading payment data: ' +
+              data.error +
+              "</div>";
+            return;
+          }
 
-        let totalPaid = 0;
-        let html =
-          '<table class="table"><thead><tr><th>Quarter</th><th>Amount</th><th>Date</th><th>Method</th><th>Confirmation</th></tr></thead><tbody>';
+          if (data.length === 0) {
+            document.getElementById("payment-history").innerHTML =
+              "<p>No tax payments recorded yet.</p>";
+            return;
+          }
 
-        data.forEach((payment) => {
-          totalPaid += parseFloat(payment.amount);
-          html += `
-                    <tr>
-                        <td>${payment.quarter}</td>
-                        <td>${formatCurrency(payment.amount)}</td>
-                        <td>${formatDate(payment.payment_date)}</td>
-                        <td>${payment.payment_method || "N/A"}</td>
-                        <td>${payment.confirmation_number || "N/A"}</td>
-                    </tr>
-                `;
-        });
+          let totalPaid = 0;
+          let html =
+            '<table class="table"><thead><tr><th>Quarter</th><th>Amount</th><th>Date</th><th>Method</th><th>Confirmation</th><th>Actions</th></tr></thead><tbody>';
 
-        html += "</tbody></table>";
-
-        const summaryHTML = `
-                <div class="stat-card" style="margin-bottom: 20px;">
-                    <h4>Total Payments Made</h4>
-                    <div class="amount">${formatCurrency(totalPaid)}</div>
-                </div>
-                ${html}
+          data.forEach((payment) => {
+            totalPaid += parseFloat(payment.amount);
+            html += `
+              <tr onclick="showRecordDetails('tax-payments', ${
+                payment.id
+              })" style="cursor: pointer;">
+                <td>${payment.quarter}</td>
+                <td>${formatCurrency(payment.amount)}</td>
+                <td>${formatDate(payment.payment_date)}</td>
+                <td>${payment.payment_method || "N/A"}</td>
+                <td>${payment.confirmation_number || "N/A"}</td>
+              </tr>
             `;
+          });
 
-        document.getElementById("payment-history").innerHTML = summaryHTML;
+          html += "</tbody></table>";
+
+          const summaryHTML = `
+            <div class="stat-card" style="margin-bottom: 20px;">
+              <h4>Total Payments Made</h4>
+              <div class="amount">${formatCurrency(totalPaid)}</div>
+            </div>
+            ${html}
+          `;
+
+          document.getElementById("payment-history").innerHTML = summaryHTML;
+        } catch (error) {
+          document.getElementById("payment-history").innerHTML =
+            '<div class="alert alert-danger">Error loading payment data: ' +
+            error.message +
+            "</div>";
+        }
       }
 
       // Goals functions
@@ -1643,75 +2906,161 @@
 
         const formData = {
           goal_name: document.getElementById("goal-name").value,
-          goal_type: document.getElementById("goal-type").value,
           target_amount: parseFloat(
             document.getElementById("target-amount").value
           ),
           current_amount:
             parseFloat(document.getElementById("current-amount").value) || 0,
           target_date: document.getElementById("target-date").value,
+          goal_type: document.getElementById("goal-type").value,
         };
 
         const result = await apiCall("savings-goals", "POST", formData);
 
         if (result.success) {
-          document.getElementById("goal-form").reset();
-          document.getElementById("current-amount").value = "0";
+          resetFormCompletely("goal-form");
+          showNotification("Savings goal added successfully!", "success");
           loadGoalsData();
+        } else {
+          alert("Error adding goal: " + (result.error || "Unknown error"));
         }
       }
 
       async function loadGoalsData() {
-        const data = await apiCall("savings-goals");
+        try {
+          const data = await apiCall("savings-goals");
 
-        if (data.length === 0) {
-          document.getElementById("goals-list").innerHTML =
-            "<p>No savings goals set yet. Add one above to get started!</p>";
-          return;
-        }
+          if (data.error) {
+            document.getElementById("goals-list").innerHTML =
+              '<div class="alert alert-danger">Error loading goals data: ' +
+              data.error +
+              "</div>";
+            return;
+          }
 
-        let html = "";
+          if (data.length === 0) {
+            document.getElementById("goals-list").innerHTML =
+              "<p>No savings goals created yet. Add one above to get started!</p>";
+            return;
+          }
 
-        data.forEach((goal) => {
-          const progress = (goal.current_amount / goal.target_amount) * 100;
-          const remaining = goal.target_amount - goal.current_amount;
+          let html = "";
+          data.forEach((goal) => {
+            const progress = (goal.current_amount / goal.target_amount) * 100;
+            const remaining = goal.target_amount - goal.current_amount;
+            const progressColor =
+              progress >= 100
+                ? "#28a745"
+                : progress >= 75
+                ? "#20c997"
+                : progress >= 50
+                ? "#ffc107"
+                : "#dc3545";
 
-          html += `
-                    <div class="card">
-                        <h4>${goal.goal_name}</h4>
-                        <p><strong>Type:</strong> ${goal.goal_type
-                          .replace("-", " ")
-                          .replace(/\b\w/g, (l) => l.toUpperCase())}</p>
-                        <p><strong>Target:</strong> ${formatCurrency(
-                          goal.target_amount
-                        )}</p>
-                        <p><strong>Current:</strong> ${formatCurrency(
-                          goal.current_amount
-                        )}</p>
-                        <p><strong>Remaining:</strong> ${formatCurrency(
-                          remaining
-                        )}</p>
-                        ${
-                          goal.target_date
-                            ? `<p><strong>Target Date:</strong> ${formatDate(
-                                goal.target_date
-                              )}</p>`
-                            : ""
-                        }
-                        
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${Math.min(
-                              progress,
-                              100
-                            )}%">
-                                ${progress.toFixed(1)}%
-                            </div>
-                        </div>
+            html += `
+              <div class="card" style="margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                  <div>
+                    <h4 style="color: #667eea; margin-bottom: 5px;">${
+                      goal.goal_name
+                    }</h4>
+                    <p style="color: #6c757d; margin-bottom: 10px; text-transform: capitalize;">
+                      ${goal.goal_type.replace("-", " ")} Goal
+                    </p>
+                  </div>
+                  <div class="goal-card-actions">
+                    <button class="btn btn-small" onclick="editRecordDirect('savings-goals', ${
+                      goal.id
+                    })">✏️ Edit</button>
+                    <button class="btn btn-small btn-danger" onclick="deleteRecordDirect('savings-goals', ${
+                      goal.id
+                    })">🗑️ Delete</button>
+                  </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                  <div>
+                    <small style="color: #6c757d;">Target Amount</small>
+                    <div style="font-weight: 600; color: #333;">${formatCurrency(
+                      goal.target_amount
+                    )}</div>
+                  </div>
+                  <div>
+                    <small style="color: #6c757d;">Current Amount</small>
+                    <div style="font-weight: 600; color: #333;">${formatCurrency(
+                      goal.current_amount
+                    )}</div>
+                  </div>
+                  <div>
+                    <small style="color: #6c757d;">Remaining</small>
+                    <div style="font-weight: 600; color: ${
+                      remaining <= 0 ? "#28a745" : "#333"
+                    };">
+                      ${
+                        remaining <= 0
+                          ? "Goal Achieved! 🎉"
+                          : formatCurrency(remaining)
+                      }
                     </div>
-                `;
-        });
+                  </div>
+                </div>
+                
+                ${
+                  goal.target_date
+                    ? `
+                  <div style="margin-bottom: 15px;">
+                    <small style="color: #6c757d;">Target Date: </small>
+                    <span style="font-weight: 600;">${formatDate(
+                      goal.target_date
+                    )}</span>
+                  </div>
+                `
+                    : ""
+                }
+                
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: ${Math.min(
+                    progress,
+                    100
+                  )}%; background: ${progressColor};">
+                    ${progress.toFixed(1)}%
+                  </div>
+                </div>
+              </div>
+            `;
+          });
 
-        document.getElementById("goals-list").innerHTML = html;
+          document.getElementById("goals-list").innerHTML = html;
+        } catch (error) {
+          document.getElementById("goals-list").innerHTML =
+            '<div class="alert alert-danger">Error loading goals data: ' +
+            error.message +
+            "</div>";
+        }
+      }
+
+      // Window click handler for modals
+      function setupModalClickHandlers() {
+        const modals = ["detailModal", "editModal", "confirmDeleteModal"];
+
+        modals.forEach((modalId) => {
+          const modal = document.getElementById(modalId);
+          if (modal) {
+            // Handle backdrop clicks
+            modal.addEventListener("click", function (event) {
+              if (event.target === modal) {
+                closeModal(modalId);
+              }
+            });
+
+            // Handle escape key
+            document.addEventListener("keydown", function (event) {
+              if (event.key === "Escape" && modal.style.display === "block") {
+                closeModal(modalId);
+              }
+            });
+          }
+        });
       }
     </script>
   </body>
