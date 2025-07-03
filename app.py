@@ -3,6 +3,7 @@
 Business Finance Manager - Schedule C Tax Tracking
 Flask Backend Application with Complete CRUD Operations
 Fixed Date Handling to Prevent Timezone Issues
+Updated with Progressive Tax Brackets
 """
 
 from flask import Flask, render_template, request, jsonify
@@ -34,6 +35,215 @@ def parse_date_safely(date_str):
             return parsed_date
         except ValueError:
             return None
+
+# Progressive Tax Bracket Calculations
+def get_tax_brackets(tax_year, filing_status):
+    """Get tax brackets for the specified year and filing status"""
+    
+    # 2024 Tax Brackets
+    brackets_2024 = {
+        'single': [
+            (11600, 0.10),    # 10% on income up to $11,600
+            (47150, 0.12),    # 12% on income $11,601 to $47,150
+            (100525, 0.22),   # 22% on income $47,151 to $100,525
+            (191650, 0.24),   # 24% on income $100,526 to $191,650
+            (243725, 0.32),   # 32% on income $191,651 to $243,725
+            (609350, 0.35),   # 35% on income $243,726 to $609,350
+            (float('inf'), 0.37)  # 37% on income over $609,350
+        ],
+        'married-joint': [
+            (23200, 0.10),    # 10% on income up to $23,200
+            (94300, 0.12),    # 12% on income $23,201 to $94,300
+            (201050, 0.22),   # 22% on income $94,301 to $201,050
+            (383900, 0.24),   # 24% on income $201,051 to $383,900
+            (487450, 0.32),   # 32% on income $383,901 to $487,450
+            (731200, 0.35),   # 35% on income $487,451 to $731,200
+            (float('inf'), 0.37)  # 37% on income over $731,200
+        ],
+        'married-separate': [
+            (11600, 0.10),    # 10% on income up to $11,600
+            (47150, 0.12),    # 12% on income $11,601 to $47,150
+            (100525, 0.22),   # 22% on income $47,151 to $100,525
+            (191950, 0.24),   # 24% on income $100,526 to $191,950
+            (243725, 0.32),   # 32% on income $191,951 to $243,725
+            (365600, 0.35),   # 35% on income $243,726 to $365,600
+            (float('inf'), 0.37)  # 37% on income over $365,600
+        ],
+        'head-of-household': [
+            (16550, 0.10),    # 10% on income up to $16,550
+            (63100, 0.12),    # 12% on income $16,551 to $63,100
+            (100500, 0.22),   # 22% on income $63,101 to $100,500
+            (191650, 0.24),   # 24% on income $100,501 to $191,650
+            (243700, 0.32),   # 32% on income $191,651 to $243,700
+            (609350, 0.35),   # 35% on income $243,701 to $609,350
+            (float('inf'), 0.37)  # 37% on income over $609,350
+        ]
+    }
+    
+    # 2025 Tax Brackets (projected - adjust as needed when official rates are released)
+    brackets_2025 = {
+        'single': [
+            (12000, 0.10),    # Estimated adjustments for inflation
+            (48750, 0.12),
+            (103900, 0.22),
+            (198050, 0.24),
+            (252050, 0.32),
+            (630050, 0.35),
+            (float('inf'), 0.37)
+        ],
+        'married-joint': [
+            (24000, 0.10),
+            (97500, 0.12),
+            (207800, 0.22),
+            (396100, 0.24),
+            (504100, 0.32),
+            (756100, 0.35),
+            (float('inf'), 0.37)
+        ],
+        'married-separate': [
+            (12000, 0.10),
+            (48750, 0.12),
+            (103900, 0.22),
+            (198050, 0.24),
+            (252050, 0.32),
+            (378050, 0.35),
+            (float('inf'), 0.37)
+        ],
+        'head-of-household': [
+            (17100, 0.10),
+            (65250, 0.12),
+            (103900, 0.22),
+            (198050, 0.24),
+            (252050, 0.32),
+            (630050, 0.35),
+            (float('inf'), 0.37)
+        ]
+    }
+    
+    if tax_year == 2024:
+        return brackets_2024.get(filing_status, brackets_2024['single'])
+    elif tax_year == 2025:
+        return brackets_2025.get(filing_status, brackets_2025['single'])
+    else:
+        # Default to 2024 brackets for other years
+        return brackets_2024.get(filing_status, brackets_2024['single'])
+
+def get_standard_deduction(tax_year, filing_status):
+    """Get standard deduction for the specified year and filing status"""
+    
+    # 2024 Standard Deductions
+    deductions_2024 = {
+        'single': 14600,
+        'married-joint': 29200,
+        'married-separate': 14600,
+        'head-of-household': 21900
+    }
+    
+    # 2025 Standard Deductions (projected)
+    deductions_2025 = {
+        'single': 15100,
+        'married-joint': 30200,
+        'married-separate': 15100,
+        'head-of-household': 22700
+    }
+    
+    if tax_year == 2024:
+        return deductions_2024.get(filing_status, deductions_2024['single'])
+    elif tax_year == 2025:
+        return deductions_2025.get(filing_status, deductions_2025['single'])
+    else:
+        return deductions_2024.get(filing_status, deductions_2024['single'])
+
+def calculate_income_tax(total_income, tax_year, filing_status):
+    """Calculate income tax using progressive brackets"""
+    if total_income <= 0:
+        return 0, []
+    
+    # Get standard deduction
+    standard_deduction = get_standard_deduction(tax_year, filing_status)
+    
+    # Calculate taxable income
+    taxable_income = max(0, total_income - standard_deduction)
+    
+    if taxable_income <= 0:
+        return 0, [{'bracket': 'Standard Deduction', 'income': total_income, 'rate': 0, 'tax': 0}]
+    
+    # Get tax brackets
+    brackets = get_tax_brackets(tax_year, filing_status)
+    
+    total_tax = 0
+    remaining_income = taxable_income
+    bracket_details = []
+    previous_limit = 0
+    
+    for limit, rate in brackets:
+        if remaining_income <= 0:
+            break
+            
+        # Calculate income in this bracket
+        bracket_income = min(remaining_income, limit - previous_limit)
+        bracket_tax = bracket_income * rate
+        
+        total_tax += bracket_tax
+        remaining_income -= bracket_income
+        
+        # Store bracket details for transparency
+        bracket_details.append({
+            'bracket': f'{rate*100:.0f}% bracket',
+            'income': bracket_income,
+            'rate': rate,
+            'tax': bracket_tax,
+            'range': f'${previous_limit:,.0f} - ${limit:,.0f}' if limit != float('inf') else f'${previous_limit:,.0f}+'
+        })
+        
+        previous_limit = limit
+        
+        if remaining_income <= 0:
+            break
+    
+    return round(total_tax, 2), bracket_details
+
+def calculate_self_employment_tax(net_profit):
+    """Calculate self-employment tax (15.3% on 92.35% of net profit)"""
+    if net_profit <= 0:
+        return 0
+    
+    # 2024 SE tax cap: $160,200 for Social Security portion (12.4%)
+    # Medicare portion (2.9%) has no cap
+    # Additional Medicare tax (0.9%) applies to income over certain thresholds
+    
+    se_income = net_profit * 0.9235
+    
+    # Social Security tax (12.4% up to wage base)
+    ss_wage_base = 160200  # 2024 limit
+    ss_taxable = min(se_income, ss_wage_base)
+    ss_tax = ss_taxable * 0.124
+    
+    # Medicare tax (2.9% on all SE income)
+    medicare_tax = se_income * 0.029
+    
+    total_se_tax = ss_tax + medicare_tax
+    
+    return round(total_se_tax, 2)
+
+def calculate_additional_medicare_tax(total_income, filing_status):
+    """Calculate additional Medicare tax (0.9% on income over threshold)"""
+    
+    # Additional Medicare tax thresholds
+    thresholds = {
+        'single': 200000,
+        'married-joint': 250000,
+        'married-separate': 125000,
+        'head-of-household': 200000
+    }
+    
+    threshold = thresholds.get(filing_status, 200000)
+    
+    if total_income > threshold:
+        additional_tax = (total_income - threshold) * 0.009
+        return round(additional_tax, 2)
+    
+    return 0
 
 def init_db():
     """Initialize the database with required tables"""
@@ -156,14 +366,6 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
-# Financial calculation functions
-def calculate_self_employment_tax(net_profit):
-    """Calculate self-employment tax (15.3% on 92.35% of net profit)"""
-    if net_profit <= 0:
-        return 0
-    se_income = net_profit * 0.9235
-    return round(se_income * 0.153, 2)
-
 def get_quarterly_due_dates(tax_year):
     """Get quarterly tax due dates for a given tax year"""
     return [
@@ -234,19 +436,35 @@ def api_overview():
         total_deductions = total_expenses + mileage_deductions + home_office_deduction + utility_deductions
         net_profit = total_income - total_deductions
         
-        # Calculate taxes
+        # Calculate taxes using progressive brackets
         se_tax = calculate_self_employment_tax(net_profit)
         
         # Get tax settings for income tax calculation
         tax_settings = conn.execute('SELECT * FROM tax_settings ORDER BY updated_at DESC LIMIT 1').fetchone()
         
         income_tax = 0
-        if tax_settings and net_profit > 0:
-            # Simplified income tax calculation (22% bracket assumption)
-            total_income_for_tax = net_profit + (tax_settings['other_income'] or 0)
-            income_tax = round(total_income_for_tax * 0.22, 2)
+        bracket_details = []
+        additional_medicare_tax = 0
         
-        total_tax = se_tax + income_tax
+        if tax_settings and net_profit > 0:
+            # Calculate total income for tax purposes
+            other_income = tax_settings['other_income'] or 0
+            total_income_for_tax = net_profit + other_income
+            
+            # Calculate income tax with progressive brackets
+            income_tax, bracket_details = calculate_income_tax(
+                total_income_for_tax, 
+                tax_settings['tax_year'], 
+                tax_settings['filing_status']
+            )
+            
+            # Calculate additional Medicare tax if applicable
+            additional_medicare_tax = calculate_additional_medicare_tax(
+                total_income_for_tax, 
+                tax_settings['filing_status']
+            )
+        
+        total_tax = se_tax + income_tax + additional_medicare_tax
         
         # Get recent transactions
         recent_income = conn.execute(
@@ -281,7 +499,9 @@ def api_overview():
             'net_profit': float(net_profit),
             'self_employment_tax': float(se_tax),
             'income_tax': float(income_tax),
+            'additional_medicare_tax': float(additional_medicare_tax),
             'total_tax': float(total_tax),
+            'bracket_details': bracket_details,
             'recent_transactions': recent_transactions,
             'tax_reminders': tax_reminders
         })
@@ -950,6 +1170,86 @@ def api_savings_goals_modify(record_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# ===== NEW TAX BREAKDOWN ENDPOINT =====
+@app.route('/api/tax-breakdown')
+def api_tax_breakdown():
+    """API endpoint for detailed tax breakdown with progressive brackets"""
+    try:
+        conn = get_db_connection()
+        
+        # Get financial data
+        income_result = conn.execute('SELECT SUM(amount) as total FROM income').fetchone()
+        expenses_result = conn.execute('SELECT SUM(amount) as total FROM expenses').fetchone()
+        mileage_result = conn.execute('SELECT SUM(deduction_amount) as total FROM mileage').fetchone()
+        
+        total_income = income_result['total'] or 0
+        total_expenses = expenses_result['total'] or 0
+        mileage_deductions = mileage_result['total'] or 0
+        
+        # Calculate home office deduction
+        home_office = conn.execute('SELECT annual_deduction FROM home_office ORDER BY created_at DESC LIMIT 1').fetchone()
+        home_office_deduction = home_office['annual_deduction'] if home_office else 0
+        
+        # Calculate utility deductions
+        utilities_result = conn.execute('SELECT SUM(annual_deduction) as total FROM utilities').fetchone()
+        utility_deductions = utilities_result['total'] or 0
+        
+        # Calculate net profit
+        total_deductions = total_expenses + mileage_deductions + home_office_deduction + utility_deductions
+        net_profit = total_income - total_deductions
+        
+        # Get tax settings
+        tax_settings = conn.execute('SELECT * FROM tax_settings ORDER BY updated_at DESC LIMIT 1').fetchone()
+        
+        conn.close()
+        
+        if not tax_settings:
+            return jsonify({'error': 'Tax settings not configured'}), 400
+        
+        # Calculate taxes with detailed breakdown
+        se_tax = calculate_self_employment_tax(net_profit)
+        
+        other_income = tax_settings['other_income'] or 0
+        total_income_for_tax = net_profit + other_income
+        
+        income_tax, bracket_details = calculate_income_tax(
+            total_income_for_tax, 
+            tax_settings['tax_year'], 
+            tax_settings['filing_status']
+        )
+        
+        additional_medicare_tax = calculate_additional_medicare_tax(
+            total_income_for_tax, 
+            tax_settings['filing_status']
+        )
+        
+        # Get standard deduction info
+        standard_deduction = get_standard_deduction(
+            tax_settings['tax_year'], 
+            tax_settings['filing_status']
+        )
+        
+        total_tax = se_tax + income_tax + additional_medicare_tax
+        
+        return jsonify({
+            'business_income': float(total_income),
+            'business_deductions': float(total_deductions),
+            'net_business_profit': float(net_profit),
+            'other_income': float(other_income),
+            'total_income': float(total_income_for_tax),
+            'standard_deduction': float(standard_deduction),
+            'taxable_income': float(max(0, total_income_for_tax - standard_deduction)),
+            'self_employment_tax': float(se_tax),
+            'income_tax': float(income_tax),
+            'additional_medicare_tax': float(additional_medicare_tax),
+            'total_tax_liability': float(total_tax),
+            'bracket_breakdown': bracket_details,
+            'tax_year': tax_settings['tax_year'],
+            'filing_status': tax_settings['filing_status']
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 def open_browser():
     """Open browser after a short delay"""
     time.sleep(1.5)
@@ -960,12 +1260,18 @@ if __name__ == '__main__':
     init_db()
     
     print("=" * 60)
-    print("🏢 BUSINESS FINANCE MANAGER")
+    print("🏢 BUSINESS FINANCE MANAGER - PROGRESSIVE TAX EDITION")
     print("=" * 60)
     print("✅ Initializing database...")
     print("✅ Starting Flask server...")
     print("🌐 Opening browser at: http://localhost:5000")
     print("❌ Press Ctrl+C to stop the application")
+    print("=" * 60)
+    print("🔥 NEW FEATURES:")
+    print("   • Progressive tax brackets (2024/2025)")
+    print("   • Standard deduction calculations")
+    print("   • Additional Medicare tax")
+    print("   • Detailed tax breakdown")
     print("=" * 60)
     
     # Start browser in separate thread
