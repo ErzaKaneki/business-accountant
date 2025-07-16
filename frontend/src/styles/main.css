@@ -1,0 +1,98 @@
+/* CSS Custom Properties for consistent theming */
+:root {
+    /* Color System */
+    --color-primary: #667eea;
+    --color-primary-dark: #746ba2;
+    --color-secondary: #6c757d;
+    --color-success: #28a745;
+    --color-warning: #ffc107;
+    --color-danger: #dc3545;
+    --color-info: #17a2b8;
+    --color-light: #f8f9fa;
+    --color-dark: #495057;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    --gradient-button: linear-gradient(45deg, var(--color-primary), var(--color-primary-dark));
+    --gradient-success: linear-gradient(45deg, var(--color-success), #20c997);
+    --gradient-danger: linear-gradient(45deg, var(--color-danger), #c82333);
+    --gradient-secondary: linear-gradient(45deg, var(--color-secondary), var(--color-dark));
+    --gradient-background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    --gradient-tab: linear-gradient(45deg, var(--color-light), #e9ecef);
+
+    /* Spacing */
+    --spacing-xs: 5px;
+    --spacing-sm: 10px;
+    --spacing-md: 15px;
+    --spacing-lg: 20px;
+    --spacing-xl: 30px;
+    --spacing-xxl: 40px;
+
+    /* Typography */
+    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-size-xs: 12px;
+    --font-size-sm: 14px;
+    --font-size-md: 16px;
+    --font-size-lg: 18px;
+    --font-size-xl: 24px;
+    --font-size-xxl: 32px;
+    --font-weight-normal: 400;
+    --font-weight-medium: 600;
+    --font-weight-bold: 700;
+
+    /* Border radius */
+    --border-radius-sm: 8px;
+    --border-radius-md: 12px;
+    --border-radius-lg: 20px;
+
+    /* Shadows */
+    --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.07);
+    --shadow-md: 0 10px 25px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 20px 40px rgba(0, 0, 0, 01);
+    --shadow-button: 0 5px 15px rgba(102, 126, 234, 0.4);
+    --shadow-danger: 0 5px 15px rgba(220, 53, 69, 0.4);
+
+    /* Transitions */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.5s ease;
+
+    /* Z-index scale */
+    --z-dropdown: 100;
+    --z-modal: 1000;
+    --z-tooltip: 1100;
+    --z-notification: 9999;
+
+    /* Layout */
+    --container-max-width: 1200px;
+    --header-height: 120px;
+    --tab-height: 60px;
+}
+
+/* Global Rest and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    background: var(--gradient-background);
+    min-height: 100vh;
+    color: #333;
+    line-height: 1.5;
+}
+
+/* Container and Layout */
+.container {
+    max-width: var(--container-max-width);
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+}
+
+/* Import all component styles */
+@import './components.css';
+@import './forms.css';
+@import './modals.css';
+@import './responsive.css';

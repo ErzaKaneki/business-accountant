@@ -1,0 +1,160 @@
+/* Header Component */
+.header {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+    color: white;
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    margin-bottom: var(--spacing-sm);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    font-weight: var(--font-weight-bold);
+}
+
+.header p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+/* App Container */
+.app-container {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    min-height: 600px;
+}
+
+/* Tab system */
+.tabs {
+    display: flex;
+    background: var(--gradient-tab);
+    border-bottom: 2px solid #dee2e6;
+    overflow-x: auto;
+}
+
+.tab {
+    padding: var(--spacing-md) var(--spacing-lg);
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-secondary);
+    transition: all var(--transition-normal);
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+}
+
+.tab-active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+    background: rgba(102, 126, 234, 0.1);
+}
+
+.tab:hover {
+    background: rgba(102, 126, 234, 0.05);
+    color: var(--color-primary);
+}
+
+/* Tab Content */
+.tab-content {
+    display: none;
+    padding: var(--spacing-xl);
+    animation: fadIn var(--transition-slow) easin-in;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Card Component */
+.card {
+    background: white;
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid #e9ecef;
+}
+
+.card h3 {
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-md);
+    font-size: 1.2rem;
+    font-weight: var(--font-weight-medium);
+}
+
+/* Stat Cards */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.stat-card {
+    background: var(--gradient-primarty);
+    color: white;
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.stat-card h4 {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-bottom: var(--spacing-sm);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: var(--font-weight-medium);
+}
+
+.stat-card .amount {
+    font-size: 1.8rem;
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--spacing-xs);
+}
+
+.stat-card small {
+    font-size: var(--font-size-xs);
+    opacity: 0.8;
+}
+
+/* Table Component */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: var(--spacing-lg);
+}
+
+.table th,
+.table td {
+    padding: var(--spacing-md);
+    text-align: left;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.table th {
+    background: var(--color-light);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-dark);
+    font-size: var(--font-size-sm);
+}
+
+.table tr {
+    transition: background-color var(--transition-fast);
+}
+
+.table tr:hover {
+    background: var(--color-light);
+    cursor: pointer;
+}
+
+.table .actions {
+    white-space: nowrap;
+}
+
+/* Alert/Notification Components*/
